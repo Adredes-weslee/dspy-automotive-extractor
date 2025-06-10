@@ -92,10 +92,27 @@ curl.exe -L "[https://static.nhtsa.gov/odi/ffdd/sgo-2021-01/SGO-2021-01_Incident
 
 This project uses `uv`, a high-performance package manager. We will use it to create a virtual environment and install the dependencies listed in `pyproject.toml`.
 
-```powershell
-# Install uv if you don't have it already
-pip install uv
+**First, install uv using one of these methods:**
 
+**Option A: Using pipx (recommended):**
+```powershell
+pip install pipx
+pipx install uv
+```
+
+**Option B: Using pip:**
+```powershell
+pip install uv
+```
+
+**Option C: Using the official installer:**
+```powershell
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+**Then set up the project:**
+
+```powershell
 # Create a virtual environment using uv
 uv venv
 
@@ -103,8 +120,11 @@ uv venv
 # Note: You may need to set your execution policy. In an Admin PowerShell, run: Set-ExecutionPolicy RemoteSigned
 .\.venv\Scripts\Activate.ps1
 
-# Install project dependencies from pyproject.toml
-uv pip sync
+# Install PyTorch with CUDA support first (using pip for better compatibility)
+pip install torch==2.7.0+cu126 torchvision==0.22.0+cu126 torchaudio==2.7.0+cu126 --extra-index-url https://download.pytorch.org/whl/cu126
+
+# Install remaining project dependencies from pyproject.toml
+uv pip install -e .
 ```
 
 *(Optional) For Bash/Linux users:*
@@ -113,7 +133,7 @@ uv pip sync
 source .venv/bin/activate
 
 # Install dependencies
-uv pip sync
+uv pip install -e .
 ```
 
 #### **Step 4: Configure Langfuse**
