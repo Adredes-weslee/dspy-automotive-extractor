@@ -65,7 +65,7 @@ def create_dspy_examples(df: pd.DataFrame) -> List[dspy.Example]:
             narrative=row['narrative'],
             make=str(row['make']),
             model=str(row['model']),
-            year=int(row['year'])
+            year=str(int(row['year']))  # ← CONVERT TO STRING!
         ).with_inputs("narrative")
         examples.append(example)
     return examples
