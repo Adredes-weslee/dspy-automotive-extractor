@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "dspy-automotive-extractor"
 version = "0.1.0"
 authors = [
-  { name="Wes Lee", email="you@example.com" },
+  { name="Wes Lee", email="weslee.qb@gmail.com" },
 ]
 description = "DSPy-Powered Prompt Optimization for structured data extraction from NHTSA automotive complaints."
 readme = "README.md"
@@ -22,12 +22,15 @@ dependencies = [
     # Core DSPy and environment packages
     "dspy-ai==2.6.27",
     "langfuse==2.36.0",
+    "langchain==0.3.25",        # Added - Langfuse dependency
+    "psutil==7.0.0",            # Added - System monitoring for verify_gpu.py
     "streamlit==1.35.0",
     "pandas==2.2.2",
     "python-dotenv==1.0.1",
     "ollama==0.2.1",
     "pydantic==2.7.4",
     "lark==1.1.9",
+    "scikit-learn==1.5.1",     # Added - For train_test_split
     # Note: PyTorch packages should be installed separately with:
     # pip install torch==2.7.0+cu126 torchvision==0.22.0+cu126 torchaudio==2.7.0+cu126 --extra-index-url https://download.pytorch.org/whl/cu126
 ]
