@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dspy-automotive-extractor"
+version = "0.1.0"
+authors = [
+  { name="Wes Lee", email="you@example.com" },
+]
+description = "DSPy-Powered Prompt Optimization for structured data extraction from NHTSA automotive complaints."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text="MIT" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    # Core DSPy and environment packages
+    "dspy-ai==2.6.27",
+    "langfuse==2.36.0",
+    "streamlit==1.35.0",
+    "pandas==2.2.2",
+    "python-dotenv==1.0.1",
+    "ollama==0.2.1",
+    "pydantic==2.7.4",
+    "lark==1.1.9",
+    "uv==0.1.42",
+
+    # Specific CUDA-enabled PyTorch versions for GPU acceleration
+    "torch==2.7.0+cu126",
+    "torchvision==0.22.0+cu126",
+    "torchaudio==2.7.0+cu126",
+]
+
+[project.urls]
+Homepage = "https://github.com/your-username/dspy-automotive-extractor"
+Repository = "https://github.com/your-username/dspy-automotive-extractor"
