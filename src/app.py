@@ -1,48 +1,48 @@
 """
 app.py
 
-This script creates the Streamlit web application to showcase the results
-of the DSPy prompt optimization.
+This script creates the Streamlit web application to serve as a
+"Results Dashboard" for the DSPy prompt optimization experiments.
 
-The application allows users to:
-1.  Select one of the pre-optimized prompt programs from a dropdown menu.
-2.  Input a sample vehicle complaint narrative.
-3.  See a side-by-side comparison of the structured output from:
-    a) A naive, un-optimized prompt.
-    b) The selected, highly-optimized DSPy program.
-4.  View performance metrics and information about the different techniques.
+The application:
+1.  Reads a central `results_summary.json` file.
+2.  Displays a performance comparison of all tested prompting strategies
+    in a clean, metric-driven table.
+3.  For each strategy, provides a direct link to its detailed Langfuse trace,
+    allowing for deep dives into the optimization process.
+4.  Includes an interactive "Live Demo" section to test the best-performing
+    program against new, user-provided text.
 """
-import os
-import sys
-import dspy
 import json
+import os
+import dspy
 import streamlit as st
+import pandas as pd
 from pathlib import Path
 from typing import Dict, Any, Optional
 
-# Add the project root to the Python path
-project_root = Path(__file__).resolve().parents[1]
-sys.path.append(str(project_root))
+# Use settings from the central settings.py module
+from settings import RESULTS_DIR, SRC_DIR, logger
 
-from src._02_define_schema import ExtractionSignature, VehicleInfo
-from src._03_define_program import ExtractionModule
-from src.settings import RESULTS_DIR, logger
+# Import necessary modules for the live demo
+from _03_define_program import ExtractionModule
 
 # --- Streamlit Page Configuration ---
 st.set_page_config(
-    page_title="DSPy Automotive Extractor",
-    page_icon="🤖",
+    page_title="DSPy Optimization Dashboard",
+    page_icon="📊",
     layout="wide",
 )
 
 # --- Caching ---
-# Cache the loaded DSPy programs to avoid reloading on every interaction
 @st.cache_resource
-def load_optimized_program(path: Path) -> Optional[ExtractionModule]:
+def load_optimized_program(path: str) -> Optional[ExtractionModule]:
     """Loads a compiled DSPy program from a JSON file."""
     try:
+        # Configure a dummy LLM for loading, it will be replaced later
+        dspy.settings.configure(lm=dspy.OllamaLocal(model="qwen3:4b"))
         program = ExtractionModule()
-        program.load(str(path))
+        program.load(path)
         logger.info(f"Loaded optimized program from {path}")
         return program
     except Exception as e:
@@ -50,97 +50,78 @@ def load_optimized_program(path: Path) -> Optional[ExtractionModule]:
         return None
 
 # --- Main Application UI ---
-st.title("🚀 DSPy-Powered Prompt Optimization Showcase")
-st.markdown("Comparing a naive prompt against DSPy-compiled programs for structured data extraction.")
+st.title("📊 DSPy Prompt Optimization Dashboard")
+st.markdown("### Comparing Prompting Strategies for Automotive Data Extraction")
 
-# --- Sidebar for Program Selection and Info ---
-with st.sidebar:
-    st.header("⚙️ Configuration")
+# --- Results Summary Section ---
+st.header("📈 Experiment Results Summary")
 
-    # Find available optimized programs
-    available_programs = {
-        f.stem.replace("optimized_", ""): f for f in RESULTS_DIR.glob("*.json")
-    }
+summary_path = RESULTS_DIR / "results_summary.json"
+if not summary_path.exists():
+    st.warning("`results_summary.json` not found. Run the optimization script to generate results.")
+else:
+    with open(summary_path, 'r') as f:
+        summary_data = json.load(f)
 
-    if not available_programs:
-        st.warning("No optimized programs found in the 'results' folder. Please run the optimization script first.")
-        selected_strategy_name = None
-    else:
-        selected_strategy_name = st.selectbox(
-            "Choose an Optimized Prompting Strategy:",
-            options=list(available_programs.keys()),
-            index=0
-        )
+    # Convert to DataFrame for better display
+    df_data = []
+    for strategy, data in summary_data.items():
+        df_data.append({
+            "Strategy": strategy.replace("_", " ").title(),
+            "Final F1 Score": data.get("final_score", "N/A"),
+            "Trace URL": data.get("trace_url", "N/A"),
+            "Timestamp": data.get("timestamp", "N/A")
+        })
 
-    st.header("About This Project")
-    st.info(
-        """
-        This demo uses the DSPy framework to programmatically optimize prompts
-        for extracting structured data (Make, Model, Year) from unstructured
-        NHTSA vehicle complaint narratives.
-
-        The `_04_run_optimization.py` script was run for each strategy, generating
-        the optimized programs you can select here.
-        """
+    df = pd.DataFrame(df_data)
+    st.dataframe(
+        df,
+        column_config={
+            "Trace URL": st.column_config.LinkColumn("🔗 View Trace", display_text="View on Langfuse"),
+        },
+        use_container_width=True,
+        hide_index=True,
     )
 
+# --- Live Demo Section ---
+st.header("🔬 Live Demo")
 
-# --- Main Content Area ---
+if not summary_data:
+    st.info("Run an optimization experiment to enable the live demo.")
+else:
+    # Find the best performing strategy to use for the demo
+    best_strategy = max(summary_data, key=lambda k: summary_data[k].get('final_score', 0))
+    best_program_path = summary_data[best_strategy].get("program_path")
 
-# Create a naive, un-optimized program for comparison
-naive_program = ExtractionModule()
-# Set its instruction to the most basic prompt
-ExtractionSignature.__doc__ = "Extract the vehicle make, model, and year from the text."
+    st.info(f"Using the best-performing program: **{best_strategy.replace('_', ' ').title()}**")
 
+    if best_program_path and Path(best_program_path).exists():
+        # Load the best program
+        best_program = load_optimized_program(best_program_path)
 
-# Input area for user
-st.subheader("📝 Enter a Vehicle Complaint Narrative")
-default_narrative = "THE CONTACT OWNS A 2022 TESLA MODEL Y. THE CONTACT STATED THAT WHILE DRIVING AT 65 MPH, THE VEHICLE'S AUTONOMOUS BRAKING SYSTEM ACTIVATED INDEPENDENTLY, CAUSING AN ABRUPT STOP IN TRAFFIC. THIS WAS A RECURRING ISSUE. THE DEALER WAS NOTIFIED BUT COULD NOT REPLICATE THE FAILURE."
-narrative_input = st.text_area(
-    "Paste a narrative here:",
-    value=default_narrative,
-    height=150
-)
+        default_narrative = "THE CONTACT OWNS A 2022 TESLA MODEL Y. THE CONTACT STATED THAT WHILE DRIVING AT 65 MPH, THE VEHICLE'S AUTONOMOUS BRAKING SYSTEM ACTIVATED INDEPENDENTLY, CAUSING AN ABRUPT STOP IN TRAFFIC."
+        narrative_input = st.text_area(
+            "Enter a complaint narrative to test the extraction:",
+            value=default_narrative,
+            height=150
+        )
 
-if st.button("🔍 Extract Information", disabled=(not selected_strategy_name)):
-    if selected_strategy_name and narrative_input:
-        # Load the selected optimized program
-        program_path = available_programs[selected_strategy_name]
-        optimized_program = load_optimized_program(program_path)
+        if st.button("Extract Vehicle Info"):
+            if best_program and narrative_input:
+                try:
+                    # Configure the LLM for inference
+                    model_name = os.getenv("OLLAMA_MODEL", "qwen3:4b")
+                    llm = dspy.OllamaLocal(model=model_name)
+                    dspy.settings.configure(lm=llm)
+                    st.success(f"Connected to Ollama model: `{model_name}` for inference.")
 
-        if optimized_program:
-            # Configure the LLM for inference
-            try:
-                model_name = os.getenv("OLLAMA_MODEL", "qwen3:4b") # Use smaller model for faster app inference
-                llm = dspy.OllamaLocal(model=model_name)
-                dspy.settings.configure(lm=llm)
-                st.success(f"Connected to Ollama model: `{model_name}`")
-            except Exception as e:
-                st.error(f"Failed to connect to Ollama. Is it running? Error: {e}")
-                st.stop()
-
-
-            # --- Display Results Side-by-Side ---
-            col1, col2 = st.columns(2)
-
-            # Run the Naive Program
-            with col1:
-                st.subheader("Baseline (Naive Prompt)")
-                with st.spinner("Running naive extraction..."):
-                    try:
-                        prediction = naive_program(narrative=narrative_input)
+                    with st.spinner("Running extraction..."):
+                        prediction = best_program(narrative=narrative_input)
                         st.json(prediction.vehicle_info.model_dump_json(indent=2))
-                    except Exception as e:
-                        st.error(f"Naive program failed: {e}")
 
-            # Run the Optimized Program
-            with col2:
-                st.subheader(f"Optimized ({selected_strategy_name})")
-                with st.spinner(f"Running optimized extraction for '{selected_strategy_name}'..."):
-                    try:
-                        # Set the signature for the optimized program
-                        # Note: The optimizer saves the instructions it found best
-                        prediction = optimized_program(narrative=narrative_input)
-                        st.json(prediction.vehicle_info.model_dump_json(indent=2))
-                    except Exception as e:
-                        st.error(f"Optimized program failed: {e}")
+                except Exception as e:
+                    st.error(f"Failed to run inference: {e}")
+            else:
+                st.error("Could not load the best-performing program.")
+    else:
+        st.error(f"Could not find the program file for the best strategy: {best_program_path}")
