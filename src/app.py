@@ -57,6 +57,7 @@ st.markdown("### Comparing Prompting Strategies for Automotive Data Extraction")
 st.header("📈 Experiment Results Summary")
 
 summary_path = RESULTS_DIR / "results_summary.json"
+summary_data = {}
 if not summary_path.exists():
     st.warning("`results_summary.json` not found. Run the optimization script to generate results.")
 else:
