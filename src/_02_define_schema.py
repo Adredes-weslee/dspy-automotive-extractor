@@ -20,11 +20,11 @@ from abc import ABC, abstractmethod
 # Using Pydantic ensures the output is type-checked and valid.
 
 class VehicleInfo(BaseModel):
-    """Pydantic model for the structured vehicle information."""
-    make: str = Field(description="The manufacturer of the vehicle, e.g., 'TESLA', 'FORD'. Should be in all caps.")
-    model: str = Field(description="The model of the vehicle, e.g., 'MODEL Y', 'F-150'. Should be in all caps.")
-    year: int = Field(description="The model year of the vehicle, e.g., 2022.")
-
+    """Structured representation of vehicle information."""
+    make: str = Field(description="Vehicle manufacturer (e.g., 'Toyota', 'Ford')")
+    model: str = Field(description="Vehicle model (e.g., 'Camry', 'F-150')")
+    year: str = Field(description="Vehicle year as 4-digit string (e.g., '2020') or 'UNKNOWN' if not found")
+    
 # --- Base DSPy Signature ---
 # This defines the input and output fields for our LLM call.
 
