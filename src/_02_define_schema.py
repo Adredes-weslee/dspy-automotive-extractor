@@ -1,7 +1,7 @@
 """
 _02_define_schema.py
 
-This script defines the data structures for our LLM pipeline. It includes:
+This script defines the data structures and prompting strategies for our LLM pipeline. It includes:
 1.  A Pydantic model (`VehicleInfo`) that defines the strict, typed schema for
     the structured data we want to extract.
 2.  A base DSPy Signature (`ExtractionSignature`) that defines the high-level
@@ -10,17 +10,47 @@ This script defines the data structures for our LLM pipeline. It includes:
     to easily switch between different prompt instructions (e.g., CoT, Self-Refine)
     by defining each as a separate "strategy" class. This makes the system
     modular and easy to extend with new techniques.
+
+Usage:
+    .\.venv\Scripts\python.exe src\_02_define_schema.py
+
+Example:
+    >>> from _02_define_schema import get_strategy, ExtractionSignature
+    >>> strategy = get_strategy("chain_of_thought")
+    >>> ExtractionSignature.__doc__ = strategy.get_docstring()
 """
+
+from abc import ABC, abstractmethod
+
 import dspy
 from pydantic import BaseModel, Field
-from abc import ABC, abstractmethod
 
 # --- Pydantic Output Model ---
 # This defines the structured data we want the LLM to return.
 # Using Pydantic ensures the output is type-checked and valid.
 
+
 class VehicleInfo(BaseModel):
-    """Structured representation of vehicle information extracted from automotive complaints or narratives."""
+    """
+    Structured representation of vehicle information extracted from automotive complaints or narratives.
+
+    This Pydantic model defines the exact schema for vehicle data that the LLM should extract.
+    It ensures type safety and provides clear field descriptions for the extraction process.
+
+    Attributes:
+        make (str): Vehicle manufacturer name (e.g., 'Tesla', 'Toyota', 'Ford').
+                   Use 'UNKNOWN' if not found in the text.
+        model (str): Vehicle model name (e.g., 'Model 3', 'Camry', 'F-150').
+                    Use 'UNKNOWN' if not found in the text.
+        year (str): Vehicle year as 4-digit string (e.g., '2023', '2024').
+                   Use 'UNKNOWN' if not found in the text.
+
+    Example:
+        >>> vehicle = VehicleInfo(make="Tesla", model="Model Y", year="2023")
+        >>> print(vehicle.make)
+        Tesla
+    """
+
     make: str = Field(
         description="Vehicle manufacturer name. Examples: 'Tesla', 'Toyota', 'Ford', 'BMW', 'Mercedes-Benz', 'Chevrolet', 'KIA', 'Rivian', 'Subaru'. Extract the exact brand name as mentioned in the text. If not found, use 'UNKNOWN'."
     )
@@ -30,31 +60,81 @@ class VehicleInfo(BaseModel):
     year: str = Field(
         description="Vehicle year as 4-digit string. Examples: '2019', '2020', '2021', '2022', '2023', '2024', '2025'. Look for phrases like '2023 Tesla', 'a 2021 model', etc. If not found, use 'UNKNOWN'."
     )
-    
+
+
 # --- Base DSPy Signature ---
 # This defines the input and output fields for our LLM call.
 
+
 class ExtractionSignature(dspy.Signature):
     """
-    Extracts structured vehicle information from an unstructured narrative.
-    The specific instructions for extraction will be dynamically set by a strategy.
+    DSPy Signature for extracting structured vehicle information from unstructured narratives.
+
+    This signature defines the input/output contract for the LLM extraction task.
+    The specific instructions for extraction are dynamically set by different
+    prompting strategies to enable experimentation with various approaches.
+
+    Attributes:
+        narrative (str): Input field containing the unstructured vehicle complaint text.
+        vehicle_info (VehicleInfo): Output field containing the extracted structured data.
+
+    Note:
+        The docstring of this class is dynamically updated by prompting strategies
+        to provide specific extraction instructions to the LLM.
     """
-    narrative: str = dspy.InputField(desc="A detailed, unstructured description of a vehicle complaint.")
-    vehicle_info: VehicleInfo = dspy.OutputField(desc="The structured vehicle information.")
+
+    narrative: str = dspy.InputField(
+        desc="A detailed, unstructured description of a vehicle complaint."
+    )
+    vehicle_info: VehicleInfo = dspy.OutputField(
+        desc="The structured vehicle information."
+    )
 
 
 # --- Strategy Pattern for Prompting Techniques ---
 
+
 class PromptStrategy(ABC):
-    """Abstract base class for a prompting strategy."""
+    """
+    Abstract base class for prompting strategies in the vehicle extraction pipeline.
+
+    This class defines the interface for all prompting strategies, enabling
+    different approaches to be swapped in and out easily. Each concrete strategy
+    provides specific instructions for how the LLM should extract vehicle information.
+
+    The strategy pattern allows for experimentation with various prompting techniques
+    like Chain of Thought, Self-Refine, Plan and Solve, etc.
+    """
+
     @abstractmethod
     def get_docstring(self) -> str:
-        """Returns the docstring to be used for the DSPy Signature."""
+        """
+        Returns the instruction docstring to be used for the DSPy Signature.
+
+        Returns:
+            str: A detailed instruction string that will be used as the signature's
+                docstring, providing specific guidance to the LLM on how to perform
+                the extraction task.
+        """
         pass
 
+
 class NaivePrompt(PromptStrategy):
-    """A simple, direct instruction for extraction with clear examples."""
+    """
+    A simple, direct instruction strategy for vehicle information extraction.
+
+    This strategy provides straightforward extraction instructions with clear examples.
+    It serves as a baseline approach without complex reasoning steps, making it
+    ideal for comparison with more sophisticated prompting techniques.
+    """
+
     def get_docstring(self) -> str:
+        """
+        Returns simple, direct extraction instructions with examples.
+
+        Returns:
+            str: Basic extraction instructions with clear input/output examples.
+        """
         return """Extract the vehicle make, model, and year from the automotive complaint text.
 
 Examples:
@@ -64,9 +144,24 @@ Examples:
 
 Use "UNKNOWN" if any information is not clearly mentioned."""
 
+
 class ChainOfThought(PromptStrategy):
-    """Instructs the model to reason step-by-step."""
+    """
+    Chain of Thought prompting strategy for step-by-step reasoning.
+
+    This strategy instructs the model to break down the extraction task into
+    sequential steps, encouraging explicit reasoning about each piece of information.
+    This approach often leads to better accuracy by making the reasoning process
+    more transparent and systematic.
+    """
+
     def get_docstring(self) -> str:
+        """
+        Returns step-by-step extraction instructions encouraging explicit reasoning.
+
+        Returns:
+            str: Instructions that guide the model through a systematic extraction process.
+        """
         return """Let's extract vehicle information step by step:
 
 1. MAKE: Search for vehicle manufacturer names like Tesla, Toyota, Ford, BMW, etc.
@@ -79,9 +174,24 @@ Be careful to distinguish between:
 
 If any information is not clearly stated, use "UNKNOWN" for that field."""
 
+
 class PlanAndSolve(PromptStrategy):
-    """Instructs the model to first devise a plan and then execute it."""
+    """
+    Plan-and-Solve prompting strategy that separates planning from execution.
+
+    This strategy instructs the model to first devise a comprehensive plan for
+    the extraction task, then execute that plan systematically. This two-phase
+    approach can improve performance by encouraging more deliberate and organized
+    reasoning processes.
+    """
+
     def get_docstring(self) -> str:
+        """
+        Returns instructions for planning the extraction approach before execution.
+
+        Returns:
+            str: Two-phase instructions covering planning and execution steps.
+        """
         return """Plan: I will extract vehicle make, model, and year from this automotive complaint text.
 
 Step 1: Identify the vehicle manufacturer (make) - look for brand names
@@ -90,9 +200,24 @@ Step 3: Identify the year - look for 4-digit years, often before or after the ma
 
 Execution: Now I'll carefully read the text and extract each piece of information, using "UNKNOWN" if any detail is not clearly mentioned."""
 
+
 class SelfRefine(PromptStrategy):
-    """Instructs the model to generate a draft and then critique it."""
+    """
+    Self-Refine prompting strategy for iterative improvement.
+
+    This strategy instructs the model to generate an initial extraction, critique
+    its own work, and then refine the results. This self-correction approach can
+    lead to higher accuracy by catching and correcting initial mistakes or
+    oversights in the extraction process.
+    """
+
     def get_docstring(self) -> str:
+        """
+        Returns instructions for draft-critique-refine extraction process.
+
+        Returns:
+            str: Three-phase instructions for iterative self-improvement.
+        """
         return """Step 1 - DRAFT: First, extract what you think is the vehicle's make, model, and year from the text.
 
 Step 2 - CRITIQUE: Review your draft extraction:
@@ -103,9 +228,25 @@ Step 2 - CRITIQUE: Review your draft extraction:
 
 Step 3 - REFINE: Based on your critique, provide the final, corrected extraction. Use "UNKNOWN" for any field you cannot confidently determine."""
 
+
 class ContrastiveCoT(PromptStrategy):
-    """Provides both good and bad examples of reasoning."""
+    """
+    Contrastive Chain of Thought strategy using positive and negative examples.
+
+    This strategy provides both correct and incorrect reasoning examples to help
+    the model understand what to avoid. By showing both good and bad approaches,
+    it helps the model distinguish between relevant and irrelevant information
+    more effectively.
+    """
+
     def get_docstring(self) -> str:
+        """
+        Returns instructions with contrasting good and bad reasoning examples.
+
+        Returns:
+            str: Instructions featuring both positive and negative examples
+                 to guide proper reasoning.
+        """
         return """To extract vehicle information correctly, you must distinguish between relevant and irrelevant details.
 
 GOOD REASONING EXAMPLE:
@@ -121,6 +262,7 @@ Result: Make=UNKNOWN, Model=UNKNOWN, Year=UNKNOWN
 
 Now analyze the following text using good reasoning principles."""
 
+
 # Factory to get a strategy by name
 PROMPT_STRATEGIES = {
     "naive": NaivePrompt(),
@@ -130,20 +272,38 @@ PROMPT_STRATEGIES = {
     "contrastive_cot": ContrastiveCoT(),
 }
 
+
 def get_strategy(name: str) -> PromptStrategy:
     """
     Retrieves a prompt strategy instance by its name.
 
+    This factory function provides access to different prompting strategies
+    by name, enabling easy experimentation and comparison between approaches.
+
     Args:
-        name (str): The name of the strategy.
+        name (str): The name of the strategy to retrieve. Must be one of:
+                   'naive', 'cot', 'plan_and_solve', 'self_refine', 'contrastive_cot'.
+                   Case-insensitive.
 
     Returns:
-        PromptStrategy: An instance of the requested strategy.
+        PromptStrategy: An instance of the requested prompting strategy.
+
+    Raises:
+        ValueError: If the strategy name is not recognized.
+
+    Example:
+        >>> strategy = get_strategy("chain_of_thought")
+        >>> docstring = strategy.get_docstring()
+        >>> print(docstring[:50])
+        Let's extract vehicle information step by step:
     """
     strategy = PROMPT_STRATEGIES.get(name.lower())
     if not strategy:
-        raise ValueError(f"Unknown strategy: {name}. Available: {list(PROMPT_STRATEGIES.keys())}")
+        raise ValueError(
+            f"Unknown strategy: {name}. Available: {list(PROMPT_STRATEGIES.keys())}"
+        )
     return strategy
+
 
 if __name__ == "__main__":
     # This block allows you to run this script directly to test the strategies
