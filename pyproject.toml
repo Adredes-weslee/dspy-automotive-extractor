@@ -28,12 +28,8 @@ dependencies = [
     "ollama==0.2.1",
     "pydantic==2.7.4",
     "lark==1.1.9",
-    "uv==0.1.42",
-
-    # Specific CUDA-enabled PyTorch versions for GPU acceleration
-    "torch==2.7.0+cu126",
-    "torchvision==0.22.0+cu126",
-    "torchaudio==2.7.0+cu126",
+    # Note: PyTorch packages should be installed separately with:
+    # pip install torch==2.7.0+cu126 torchvision==0.22.0+cu126 torchaudio==2.7.0+cu126 --extra-index-url https://download.pytorch.org/whl/cu126
 ]
 
 [project.urls]
