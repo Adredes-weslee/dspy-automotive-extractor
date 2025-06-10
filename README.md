@@ -109,17 +109,23 @@ This project uses `uv` for fast package management.
 pip install uv
 
 # Create a virtual environment using uv
-uv venv
+python -m uv venv .venv
 
 # Activate the virtual environment
 # Note: You may need to set your execution policy. In an Admin PowerShell, run: Set-ExecutionPolicy RemoteSigned
 .\.venv\Scripts\Activate.ps1
 
-# Install PyTorch with CUDA support first (using pip for better compatibility)
-pip install torch==2.7.0+cu126 torchvision==0.22.0+cu126 torchaudio==2.7.0+cu126 --extra-index-url https://download.pytorch.org/whl/cu126
+# Install pip in the UV environment
+.\.venv\Scripts\python.exe -m ensurepip --upgrade
 
-# Install remaining project dependencies from pyproject.toml
-uv pip install -e .
+# Install PyTorch with CUDA support first (using the full path as in README)
+.\.venv\Scripts\python.exe -m pip install torch==2.7.0+cu126 torchvision==0.22.0+cu126 torchaudio==2.7.0+cu126 --extra-index-url https://download.pytorch.org/whl/cu126
+
+# Install UV directly in your virtual environment
+.\.venv\Scripts\python.exe -m pip install uv
+
+# Install remaining project dependencies from pyproject.toml (using Python module approach)
+python -m uv pip install -e .
 ```
 
 *(Optional) For Bash/Linux users:*
