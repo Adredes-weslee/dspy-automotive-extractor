@@ -15,7 +15,7 @@
 
 This project demonstrates a systematic and programmatic framework for optimizing Large Language Models (LLMs) to perform high-accuracy structured data extraction from unstructured automotive service complaints. Leveraging Stanford's **DSPy** library, this system transitions from manual "prompt engineering" to a more robust "prompt compilation" paradigm.
 
-The core objective is to take raw, unstructured text from the official **NHTSA vehicle complaints database** and reliably extract structured entities (e.g., vehicle component, failure type). The system uses DSPy optimizers to automatically find the most effective prompt instructions and few-shot examples based on a quantitative evaluation metric, ensuring the final prompt is both highly accurate and auditable.
+The core objective is to take raw, unstructured text from the official **NHTSA vehicle complaints database** and reliably extract structured entities like the vehicle's **Make, Model, and Year**. The system uses DSPy optimizers to automatically find the most effective prompt instructions and few-shot examples based on a quantitative evaluation metric, ensuring the final prompt is both highly accurate and auditable.
 
 The entire pipeline is designed for local-first execution with **Ollama** and is deeply integrated with **Langfuse** for fine-grained observability, meeting key enterprise requirements for data privacy and traceability.
 
@@ -24,8 +24,8 @@ The entire pipeline is designed for local-first execution with **Ollama** and is
 Manually iterating on prompts is inefficient and lacks rigor. This project adopts the DSPy philosophy: **treat LLM pipelines as programs that can be compiled and optimized.**
 
 Instead of guessing which prompt is best, we:
-1.  **Define a Task Signature**: We specify the desired input and output fields in a structured way.
-2.  **Provide an Evaluation Metric**: We write a Python function that scores the LLM's accuracy.
+1.  **Define a Task Signature**: We specify the desired input (`NARRATIVE`) and output fields (`MAKE`, `MODEL`, `YEAR`) in a structured way.
+2.  **Provide an Evaluation Metric**: We write a Python function that scores the LLM's accuracy by comparing its output to the ground truth columns in the dataset.
 3.  **Run an Optimizer**: We use a DSPy teleprompter (e.g., `BootstrapFewShot`) that automatically explores the solution space of prompts and few-shot examples, guided by the metric, to produce a high-performing, "compiled" prompt.
 
 ### 3. Key Features
@@ -33,7 +33,7 @@ Instead of guessing which prompt is best, we:
 | Feature | Description | Benefit |
 | :--- | :--- | :--- |
 | 🤖 **Automated Optimization** | Uses DSPy optimizers to programmatically find the best-performing prompts. | Eliminates manual trial-and-error; provides a data-driven, repeatable process. |
-| 📊 **Quantitative Evaluation** | Employs a concrete F1-score metric to objectively measure extraction accuracy. | Ensures changes are measured and that the final prompt is demonstrably superior. |
+| 📊 **Quantitative Evaluation** | Employs a concrete F1-score metric to objectively measure extraction accuracy against ground truth. | Ensures changes are measured and that the final prompt is demonstrably superior. |
 | 🚀 **Local & Secure** | Runs entirely on-premises with Ollama, ensuring no sensitive data is sent to external APIs. | Guarantees 100% data privacy and control, crucial for enterprise applications. |
 | 🔍 **Fine-Grained Observability** | Integrated with Langfuse to trace every step of the optimization process. | Provides deep insights for debugging, auditing, and understanding the LLM's behavior. |
 | 🧪 **Modular & Testable Workflow** | The pipeline is broken into numbered scripts, allowing each step to be run and validated independently. | Simplifies debugging and ensures a robust, step-by-step development process. |
@@ -75,7 +75,7 @@ These instructions assume you are using **Windows PowerShell**.
 
 #### **Step 1: Clone the Repository**
 ```powershell
-git clone [https://github.com/your-username/dspy-automotive-extractor.git](https://github.com/your-username/dspy-automotive-extractor.git)
+git clone [https://github.com/your-username/dspy-automotive-extractor.git](https://github.com/Adredes-weslee/dspy-automotive-extractor.git)
 cd dspy-automotive-extractor
 ```
 
@@ -165,12 +165,13 @@ This framework is designed for experimentation. To test different prompting tech
 
 Here are the initial techniques to test, progressing from simple to complex:
 
-| Technique Category | Example Instruction |
-| :--- | :--- |
-| **1. Naive Prompt** | "Extract the component and failure from the text." |
-| **2. Thought Generation (CoT)** | "Let's think step by step. First, identify the primary failing component. Second, identify the specific failure mode described. Finally, provide the structured output." |
-| **3. Decomposition (Plan-and-Solve)** | "First, devise a plan to extract the required information. Then, execute the plan, detailing each step of the extraction to arrive at the final answer." |
-| **4. Self-Criticism (Self-Refine)** | "Generate a draft extraction. Then, critique your draft for accuracy and completeness. Finally, based on your critique, provide a final, refined structured answer." |
+| # | Technique Category | Example Instruction for Extracting Make, Model, and Year |
+| :--- | :--- | :--- |
+| 1 | **Naive Prompt** | "Extract the vehicle make, model, and year from the text." |
+| 2 | **Thought Generation (CoT)** | "Let's think step by step. First, identify the vehicle's make. Second, identify its model. Third, find the model year. Finally, provide the structured output." |
+| 3 | **Decomposition (Plan-and-Solve)** | "First, devise a plan to extract the vehicle's make, model, and year. Then, execute the plan, detailing each step of the extraction to arrive at the final answer." |
+| 4 | **Self-Criticism (Self-Refine)** | "Generate a draft extraction of the vehicle's make, model, and year. Then, critique your draft for accuracy and completeness. Finally, based on your critique, provide a final, refined structured answer." |
+| 5 | **Contrastive CoT** | "To extract the vehicle's make, model, and year, you must reason correctly. A good example of reasoning is: 'The text mentions a 2022 Tesla Model Y. Therefore, the make is Tesla, the model is Model Y, and the year is 2022.' A bad example is: 'The text mentions a steering wheel, so the make is car.' Now, analyze the following text." |
 
 By running the optimization for each of these and saving the results, the Streamlit app can be extended to compare all of them, creating a powerful visualization that directly validates the skills highlighted on your resume.
 
