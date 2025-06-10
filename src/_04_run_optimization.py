@@ -19,30 +19,15 @@ import argparse
 from pathlib import Path
 from datetime import datetime
 from dspy.teleprompt import BootstrapFewShot
-from langfuse.callback import DspyCallbackHandler
+from sklearn.model_selection import train_test_split
+
 
 # Use settings from the central settings.py module
-from settings import RESULTS_DIR, logger
+from settings import RESULTS_DIR, logger, setup_environment
 
 from _01_load_data import get_dataset
 from _02_define_schema import ExtractionSignature, get_strategy, PROMPT_STRATEGIES
 from _03_define_program import ExtractionModule, extraction_metric
-
-
-def setup_environment() -> DspyCallbackHandler | None:
-    """Sets up the DSPy environment with Ollama and Langfuse."""
-    model_name = os.getenv("OLLAMA_MODEL", "gemma3:12b")
-    
-    # Use LM class with ollama provider for DSPy 2.6.27
-    llm = dspy.LM(model=f"ollama/{model_name}", max_tokens=2048)
-    dspy.settings.configure(lm=llm)
-    logger.info(f"DSPy configured with Ollama model: {model_name}")
-
-    if all(k in os.environ for k in ["LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY", "LANGFUSE_HOST"]):
-        logger.info("Langfuse credentials found, initializing tracker.")
-        return DspyCallbackHandler()
-    logger.warning("Langfuse credentials not found. Skipping tracing.")
-    return None
 
 
 def update_results_summary(strategy_name: str, score: float, trace_url: str, optimized_path: str):
@@ -70,10 +55,17 @@ def main(strategy_name: str):
     logger.info(f"--- Starting optimization for strategy: {strategy_name} ---")
 
     langfuse_handler = setup_environment()
-    callbacks = [langfuse_handler] if langfuse_handler else []
 
     dataset = get_dataset()
-    trainset, devset = dspy.train_test_split(dataset, train_size=0.7, random_state=42)
+    
+    # Use sklearn's train_test_split (works perfectly with lists)
+    trainset, devset = train_test_split(
+        dataset, 
+        train_size=0.7, 
+        random_state=42,
+        shuffle=True
+    )
+    
     logger.info(f"Loaded dataset: {len(trainset)} training, {len(devset)} validation examples.")
 
     strategy = get_strategy(strategy_name)
@@ -87,7 +79,6 @@ def main(strategy_name: str):
     optimized_program = optimizer.compile(
         student=program,
         trainset=trainset,
-        callbacks=callbacks
     )
     logger.info("Compilation complete.")
     
@@ -97,7 +88,11 @@ def main(strategy_name: str):
     logger.info(f"Final evaluation score for '{strategy_name}': {final_score:.3f}")
 
     # Capture Langfuse trace URL
-    trace_url = langfuse_handler.get_trace_url() if langfuse_handler else "N/A"
+    try:
+        trace_url = langfuse_handler.get_trace_url() if langfuse_handler else "N/A"
+    except Exception as e:
+        logger.warning(f"Could not get trace URL: {e}")
+        trace_url = "http://localhost:3000"  # Default Langfuse URL
     logger.info(f"Langfuse Trace URL: {trace_url}")
 
     # Save the optimized program and update summary
