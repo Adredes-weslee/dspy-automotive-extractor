@@ -45,11 +45,26 @@ def load_and_clean_data(filepath: Path, sample_size: int = 500) -> pd.DataFrame:
         logger.error(f"Failed to load dataset: {e}")
         sys.exit(1)
 
+    # Map and rename columns
     required_columns = {'Narrative': 'narrative', 'Make': 'make', 'Model': 'model', 'Model Year': 'year'}
     df = df[list(required_columns.keys())].rename(columns=required_columns)
 
+    # Drop rows with missing required values
     df.dropna(subset=list(required_columns.values()), inplace=True)
-    df = df[df['narrative'].str.len() > 50]
+    logger.info(f"After dropping NaN values: {len(df)} rows remaining.")
+
+    # NEW: Filter out redacted narratives!
+    initial_count = len(df)
+    df = df[~df['narrative'].str.contains(r'\[REDACTED', na=False)]
+    df = df[~df['narrative'].str.contains('MAY CONTAIN CONFIDENTIAL', na=False)]
+    redacted_removed = initial_count - len(df)
+    logger.info(f"After filtering redacted content: {len(df)} rows remaining (removed {redacted_removed} redacted rows).")
+
+    # Enhanced narrative length filtering (increased from 50 to 100)
+    df = df[df['narrative'].str.len() > 100]
+    logger.info(f"After filtering short narratives (>100 chars): {len(df)} rows remaining.")
+
+    # Convert year to numeric and handle errors
     df['year'] = pd.to_numeric(df['year'], errors='coerce').astype('Int64')
     df.dropna(subset=['year'], inplace=True)
 
