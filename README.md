@@ -46,19 +46,22 @@ The project is organized into a `src` directory with numbered Python scripts tha
 ```
 dspy-automotive-extractor/
 ├── .gitignore
-├── pyproject.toml              # Project dependencies for `uv`
-├── README.md                   # This file
+├── pyproject.toml
+├── README.md
+├── .env.template               # New: Template for environment variables
 ├── data/
-│   └── NHTSA_complaints.csv    # The dataset used for training and evaluation
+│   └── NHTSA_complaints.csv
 ├── results/
-│   └── optimized_program.json  # The output of the optimization process
+│   ├── optimized_program_cot.json
+│   └── results_summary.json    # New: Central summary of all experiments
 └── src/
     ├── __init__.py
+    ├── settings.py             # New: Central configuration and settings
     ├── _01_load_data.py        # Handles loading and preparing the dataset
-    ├── _02_define_schema.py    # Defines the DSPy Signature and Pydantic models
+    ├── _02_define_schema.py    # Defines the DSPy Signature and Prompt Strategies
     ├── _03_define_program.py   # Defines the DSPy Module and the evaluation metric
-    ├── _04_run_optimization.py # The main script to run the optimizer and save the results
-    └── app.py                  # The Streamlit application for showcasing results
+    ├── _04_run_optimization.py # The main script to run the optimizer for a given strategy
+    └── app.py                  # The Streamlit dashboard for showcasing results
 ```
 
 ### 5. Setup and Installation
@@ -77,7 +80,7 @@ cd dspy-automotive-extractor
 ```
 
 #### **Step 2: Download the Dataset**
-The script will download a complaint dataset from the NHTSA. Create the `data` directory and then run the command.
+Create the `data` directory and then run the command to download the dataset.
 
 ```powershell
 mkdir data
@@ -96,28 +99,15 @@ This project supports multiple models for different hardware capabilities.
     ```powershell
     ollama pull qwen3:4b
     ```
-The scripts will default to `gemma3:12b` but can be easily configured to use the smaller model.
+The scripts will default to `gemma3:12b` but can be easily configured using the `.env` file.
 
 #### **Step 4: Setup Environment and Install Dependencies with `uv`**
+This project uses `uv` for fast package management.
 
-This project uses `uv`, a high-performance package manager. We will use it to create a virtual environment and install the dependencies listed in `pyproject.toml`.
-
-**First, install uv using one of these methods:**
-
-**Option A: Using pipx (recommended):**
 ```powershell
-pip install pipx
-pipx install uv
-```
-
-**Option B: Using pip:**
-```powershell
+# Install uv if you haven't already
 pip install uv
-```
 
-**Then set up the project:**
-
-```powershell
 # Create a virtual environment using uv
 uv venv
 
@@ -144,64 +134,59 @@ pip install torch==2.7.0+cu126 torchvision==0.22.0+cu126 torchaudio==2.7.0+cu126
 uv pip install -e .
 ```
 
-#### **Step 5: Configure Langfuse**
-Langfuse is used for observability. You can run it locally via Docker.
-
-1.  Follow the [Langfuse quickstart](https://langfuse.com/docs/get-started) to run the Docker container.
-2.  Set the following environment variables in your PowerShell session.
-
-```powershell
-$env:LANGFUSE_PUBLIC_KEY="pk-lf-..."
-$env:LANGFUSE_SECRET_KEY="sk-lf-..."
-$env:LANGFUSE_HOST="http://localhost:3000"
-```
+#### **Step 5: Configure Langfuse & Environment**
+1.  Copy the `.env.template` file to a new file named `.env`.
+    ```powershell
+    copy .env.template .env
+    ```
+2.  Follow the [Langfuse quickstart](https://langfuse.com/docs/get-started) to run the Docker container.
+3.  Open the new `.env` file and fill in your `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY`. You can also change the `OLLAMA_MODEL` if needed.
 
 ### 6. Running the Pipeline
 
-The pipeline is designed to be run step-by-step to ensure each part is working correctly.
+The pipeline is designed to be run step-by-step for testing or by executing the main optimization script for each strategy.
 
 ```powershell
 # Ensure your virtual environment is active before running these commands
 
-# 1. Test data loading and processing. This will also show you a sample of the data.
+# 1. Test data loading
 python src/_01_load_data.py
 
-# 2. Verify the DSPy Signature and Pydantic models (prints the schema).
+# 2. Verify schema definitions
 python src/_02_define_schema.py
 
-# 3. Verify the DSPy Program and evaluation metric logic.
+# 3. Test the program and metric logic
 python src/_03_define_program.py
 
-# 4. Run the full optimization pipeline. This is computationally intensive.
-python src/_04_run_optimization.py
+# 4. Run the full optimization pipeline for a specific strategy
+#    Replace 'cot' with any strategy name: naive, plan_and_solve, self_refine, etc.
+python src/_04_run_optimization.py cot
 ```
 
-After running `_04_run_optimization.py`, the best-found prompt program will be saved to `results/optimized_program.json`.
+After running `_04_run_optimization.py` for each strategy, the `results/` folder will contain the compiled programs and the `results_summary.json`.
 
 ### 7. Showcasing the Results
 
-Once the optimization is complete, launch the Streamlit application to see the comparison.
+Once you have run at least one optimization experiment, launch the Streamlit dashboard.
 
 ```powershell
 streamlit run src/app.py
 ```
-This will open a web browser where you can input a sample service complaint and see the structured output from both a naive prompt and your highly optimized DSPy program side-by-side.
+This will open a web browser showing a dashboard of your experiment results, with links to the Langfuse traces and a live demo area.
 
 ### 8. Experimenting with Prompting Techniques
 
-This framework is designed for experimentation. To test different prompting techniques from your resume, you simply modify the docstring of the `Signature` class in `src/_02_define_schema.py` and re-run the optimization.
+This framework is designed for experimentation. To test the pre-configured prompting techniques, simply run the optimization script with the desired strategy name.
 
-Here are the initial techniques to test, progressing from simple to complex:
-
-| # | Technique Category | Example Instruction for Extracting Make, Model, and Year |
+| # | Strategy Name (`<strategy>`) | Example Instruction for Extracting Make, Model, and Year |
 | :--- | :--- | :--- |
-| 1 | **Naive Prompt** | "Extract the vehicle make, model, and year from the text." |
-| 2 | **Thought Generation (CoT)** | "Let's think step by step. First, identify the vehicle's make. Second, identify its model. Third, find the model year. Finally, provide the structured output." |
-| 3 | **Decomposition (Plan-and-Solve)** | "First, devise a plan to extract the vehicle's make, model, and year. Then, execute the plan, detailing each step of the extraction to arrive at the final answer." |
-| 4 | **Self-Criticism (Self-Refine)** | "Generate a draft extraction of the vehicle's make, model, and year. Then, critique your draft for accuracy and completeness. Finally, based on your critique, provide a final, refined structured answer." |
-| 5 | **Contrastive CoT** | "To extract the vehicle's make, model, and year, you must reason correctly. A good example of reasoning is: 'The text mentions a 2022 Tesla Model Y. Therefore, the make is Tesla, the model is Model Y, and the year is 2022.' A bad example is: 'The text mentions a steering wheel, so the make is car.' Now, analyze the following text." |
+| 1 | `naive` | "Extract the vehicle make, model, and year from the text." |
+| 2 | `cot` | "Let's think step by step. First, identify the vehicle's make. Second, identify its model. Third, find the model year. Finally, provide the structured output." |
+| 3 | `plan_and_solve` | "First, devise a plan to extract the vehicle's make, model, and year. Then, execute the plan, detailing each step of the extraction to arrive at the final answer." |
+| 4 | `self_refine` | "Generate a draft extraction of the vehicle's make, model, and year. Then, critique your draft for accuracy and completeness. Finally, based on your critique, provide a final, refined structured answer." |
+| 5 | `contrastive_cot` | "To extract the vehicle's make, model, and year, you must reason correctly. A good example of reasoning is: 'The text mentions a 2022 Tesla Model Y. Therefore, the make is Tesla, the model is Model Y, and the year is 2022.' A bad example is: 'The text mentions a steering wheel, so the make is car.' Now, analyze the following text." |
 
-By running the optimization for each of these and saving the results, the Streamlit app can be extended to compare all of them, creating a powerful visualization that directly validates the skills highlighted on your resume.
+To add a new technique, simply create a new class in `src/_02_define_schema.py` following the Strategy pattern, add it to the `PROMPT_STRATEGIES` dictionary, and then run the optimization script with your new strategy's name.
 
 ### 9. License
 
