@@ -72,7 +72,7 @@ These instructions assume you are using **Windows PowerShell**.
 
 #### **Step 1: Clone the Repository**
 ```powershell
-git clone [https://github.com/Adredes-weslee/dspy-automotive-extractor.git](https://github.com/Adredes-weslee/dspy-automotive-extractor.git)
+git clone https://github.com/Adredes-weslee/dspy-automotive-extractor.git
 cd dspy-automotive-extractor
 ```
 
@@ -82,7 +82,7 @@ The script will download a complaint dataset from the NHTSA. Create the `data` d
 ```powershell
 mkdir data
 # This command downloads the file and saves it as NHTSA_complaints.csv in the data folder
-curl.exe -L -k "[https://static.nhtsa.gov/odi/ffdd/sgo-2021-01/SGO-2021-01_Incident_Reports_ADAS.csv](https://static.nhtsa.gov/odi/ffdd/sgo-2021-01/SGO-2021-01_Incident_Reports_ADAS.csv)" -o "data/NHTSA_complaints.csv"
+curl.exe -L -k "https://static.nhtsa.gov/odi/ffdd/sgo-2021-01/SGO-2021-01_Incident_Reports_ADAS.csv" -o "data/NHTSA_complaints.csv"
 ```
 
 #### **Step 3: Download Ollama Models**
@@ -126,7 +126,7 @@ uv venv
 .\.venv\Scripts\Activate.ps1
 
 # Install PyTorch with CUDA support first (using pip for better compatibility)
-pip install torch==2.7.0+cu126 torchvision==0.22.0+cu126 torchaudio==2.7.0+cu126 --extra-index-url [https://download.pytorch.org/whl/cu126](https://download.pytorch.org/whl/cu126)
+pip install torch==2.7.0+cu126 torchvision==0.22.0+cu126 torchaudio==2.7.0+cu126 --extra-index-url https://download.pytorch.org/whl/cu126
 
 # Install remaining project dependencies from pyproject.toml
 uv pip install -e .
