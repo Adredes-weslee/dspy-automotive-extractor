@@ -29,12 +29,26 @@ class ExtractionModule(dspy.Module):
         try:
             prediction = self.extractor(narrative=narrative)
             
-            # Create VehicleInfo with STRING years (not integers!)
-            vehicle_info = VehicleInfo(
-                make=getattr(prediction, 'make', 'UNKNOWN'),
-                model=getattr(prediction, 'model', 'UNKNOWN'),
-                year=getattr(prediction, 'year', 'UNKNOWN')  # ← STRING, not 0!
-            )
+            # Add debugging to see what the model actually returned
+            logger.debug(f"Raw prediction type: {type(prediction)}")
+            logger.debug(f"Raw prediction dir: {dir(prediction)}")
+            logger.debug(f"Raw prediction: {prediction}")
+            
+            # More robust extraction
+            if hasattr(prediction, 'vehicle_info'):
+                vehicle_info = prediction.vehicle_info
+            elif hasattr(prediction, 'completions') and prediction.completions:
+                # Sometimes DSPy stores results differently
+                completion = prediction.completions[0]
+                if hasattr(completion, 'vehicle_info'):
+                    vehicle_info = completion.vehicle_info
+                else:
+                    # Try to parse from the raw response
+                    logger.warning(f"No vehicle_info found, trying to parse: {completion}")
+                    vehicle_info = VehicleInfo(make="UNKNOWN", model="UNKNOWN", year="UNKNOWN")
+            else:
+                logger.warning(f"Unexpected prediction structure: {prediction}")
+                vehicle_info = VehicleInfo(make="UNKNOWN", model="UNKNOWN", year="UNKNOWN")
             
             return dspy.Prediction(
                 vehicle_info=vehicle_info,
@@ -44,13 +58,17 @@ class ExtractionModule(dspy.Module):
             )
             
         except Exception as e:
-            # Fallback for any errors - use STRING "UNKNOWN", not integer 0!
+            logger.error(f"Error in ExtractionModule.forward: {e}")
+            logger.error(f"Input narrative length: {len(narrative)}")
+            logger.error(f"First 200 chars: {narrative[:200]}")
+            
+            # Fallback for any errors
             vehicle_info = VehicleInfo(make="UNKNOWN", model="UNKNOWN", year="UNKNOWN")
             return dspy.Prediction(
                 vehicle_info=vehicle_info,
                 make="UNKNOWN",
                 model="UNKNOWN",
-                year="UNKNOWN",  # ← STRING, not 0!
+                year="UNKNOWN",
                 error=str(e)
             )
 
