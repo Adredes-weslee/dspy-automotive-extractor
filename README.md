@@ -68,14 +68,11 @@ These instructions assume you are using **Windows PowerShell**.
 #### **Prerequisites**
 1.  **Python**: Ensure you have Python 3.11+ installed and available in your PATH.
 2.  **Git**: Ensure Git is installed for cloning the repository.
-3.  **Ollama**: Install and run Ollama. Pull the required model:
-    ```powershell
-    ollama pull llama3
-    ```
+3.  **Ollama**: Install and run Ollama.
 
 #### **Step 1: Clone the Repository**
 ```powershell
-git clone [https://github.com/your-username/dspy-automotive-extractor.git](https://github.com/Adredes-weslee/dspy-automotive-extractor.git)
+git clone [https://github.com/Adredes-weslee/dspy-automotive-extractor.git](https://github.com/Adredes-weslee/dspy-automotive-extractor.git)
 cd dspy-automotive-extractor
 ```
 
@@ -85,10 +82,23 @@ The script will download a complaint dataset from the NHTSA. Create the `data` d
 ```powershell
 mkdir data
 # This command downloads the file and saves it as NHTSA_complaints.csv in the data folder
-curl.exe -L "[https://static.nhtsa.gov/odi/ffdd/sgo-2021-01/SGO-2021-01_Incident_Reports_ADAS.csv](https://static.nhtsa.gov/odi/ffdd/sgo-2021-01/SGO-2021-01_Incident_Reports_ADAS.csv)" -o "data/NHTSA_complaints.csv"
+curl.exe -L -k "[https://static.nhtsa.gov/odi/ffdd/sgo-2021-01/SGO-2021-01_Incident_Reports_ADAS.csv](https://static.nhtsa.gov/odi/ffdd/sgo-2021-01/SGO-2021-01_Incident_Reports_ADAS.csv)" -o "data/NHTSA_complaints.csv"
 ```
 
-#### **Step 3: Setup Environment and Install Dependencies with `uv`**
+#### **Step 3: Download Ollama Models**
+This project supports multiple models for different hardware capabilities.
+
+* **For high-performance GPUs (>= 8GB VRAM):**
+    ```powershell
+    ollama pull gemma3:12b
+    ```
+* **For CPU-only or lower-end GPUs (fallback):**
+    ```powershell
+    ollama pull qwen3:4b
+    ```
+The scripts will default to `gemma3:12b` but can be easily configured to use the smaller model.
+
+#### **Step 4: Setup Environment and Install Dependencies with `uv`**
 
 This project uses `uv`, a high-performance package manager. We will use it to create a virtual environment and install the dependencies listed in `pyproject.toml`.
 
@@ -105,11 +115,6 @@ pipx install uv
 pip install uv
 ```
 
-**Option C: Using the official installer:**
-```powershell
-powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
-```
-
 **Then set up the project:**
 
 ```powershell
@@ -121,7 +126,7 @@ uv venv
 .\.venv\Scripts\Activate.ps1
 
 # Install PyTorch with CUDA support first (using pip for better compatibility)
-pip install torch==2.7.0+cu126 torchvision==0.22.0+cu126 torchaudio==2.7.0+cu126 --extra-index-url https://download.pytorch.org/whl/cu126
+pip install torch==2.7.0+cu126 torchvision==0.22.0+cu126 torchaudio==2.7.0+cu126 --extra-index-url [https://download.pytorch.org/whl/cu126](https://download.pytorch.org/whl/cu126)
 
 # Install remaining project dependencies from pyproject.toml
 uv pip install -e .
@@ -136,7 +141,7 @@ source .venv/bin/activate
 uv pip install -e .
 ```
 
-#### **Step 4: Configure Langfuse**
+#### **Step 5: Configure Langfuse**
 Langfuse is used for observability. You can run it locally via Docker.
 
 1.  Follow the [Langfuse quickstart](https://langfuse.com/docs/get-started) to run the Docker container.
