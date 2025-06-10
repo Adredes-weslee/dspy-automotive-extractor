@@ -137,7 +137,10 @@ uv pip install -e .
 # Activate the virtual environment
 source .venv/bin/activate
 
-# Install dependencies
+# Install PyTorch with CUDA support first
+pip install torch==2.7.0+cu126 torchvision==0.22.0+cu126 torchaudio==2.7.0+cu126 --extra-index-url https://download.pytorch.org/whl/cu126 
+
+# Install remaining project dependencies
 uv pip install -e .
 ```
 
