@@ -45,7 +45,7 @@ def load_and_clean_data(filepath: Path, sample_size: int = 500) -> pd.DataFrame:
         logger.error(f"Failed to load dataset: {e}")
         sys.exit(1)
 
-    required_columns = {'NARRATIVE': 'narrative', 'MAKE': 'make', 'MODEL': 'model', 'YEAR': 'year'}
+    required_columns = {'Narrative': 'narrative', 'Make': 'make', 'Model': 'model', 'Model Year': 'year'}
     df = df[list(required_columns.keys())].rename(columns=required_columns)
 
     df.dropna(subset=list(required_columns.values()), inplace=True)
