@@ -11,6 +11,9 @@ import os
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
+import litellm
+import dspy
+from langfuse.callback import CallbackHandler
 
 # --- Project Root ---
 # This ensures that all paths are relative to the project's root directory
@@ -45,3 +48,47 @@ logger = logging.getLogger(__name__)
 DATA_DIR.mkdir(exist_ok=True)
 RESULTS_DIR.mkdir(exist_ok=True)
 
+
+def setup_environment():
+    """Set up DSPy with Ollama and configure Langfuse tracking."""
+    # Load environment variables
+    load_dotenv()
+    
+    # Configure DSPy with Ollama
+    model_name = os.getenv("OLLAMA_MODEL", "gemma3:12b")
+    llm = dspy.LM(model=f"ollama/{model_name}")
+    dspy.settings.configure(lm=llm)
+    logger.info(f"DSPy configured with Ollama model: {model_name}")
+    
+    # Set up Langfuse tracking
+    langfuse_handler = None
+    try:
+        secret = os.getenv("LANGFUSE_SECRET_KEY")
+        public = os.getenv("LANGFUSE_PUBLIC_KEY") 
+        host = os.getenv("LANGFUSE_HOST")
+        
+        if all([secret, public, host]):
+            # Configure LiteLLM callbacks for Langfuse
+            configure_litellm_callbacks()
+            
+            # Create CallbackHandler for trace URLs
+            langfuse_handler = CallbackHandler(
+                secret_key=secret,
+                public_key=public,
+                host=host
+            )
+            
+            logger.info("Langfuse credentials found, initializing tracker.")
+        else:
+            logger.warning("Langfuse credentials not found, proceeding without tracking.")
+            
+    except Exception as e:
+        logger.error(f"Failed to initialize Langfuse: {e}")
+        
+    return langfuse_handler
+
+def configure_litellm_callbacks() -> None:
+    """Configure LiteLLM to use Langfuse as a callback for logging model interactions."""
+    litellm.success_callback = ["langfuse"]
+    litellm.failure_callback = ["langfuse"] 
+    logger.info("Configured LiteLLM to use Langfuse as a callback.")
