@@ -61,7 +61,7 @@ def main(strategy_name: str):
     # Use sklearn's train_test_split (works perfectly with lists)
     trainset, devset = train_test_split(
         dataset, 
-        train_size=0.7, 
+        train_size=0.9, 
         random_state=42,
         shuffle=True
     )
