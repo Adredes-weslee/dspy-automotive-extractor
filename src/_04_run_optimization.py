@@ -32,7 +32,9 @@ from _03_define_program import ExtractionModule, extraction_metric
 def setup_environment() -> DspyCallbackHandler | None:
     """Sets up the DSPy environment with Ollama and Langfuse."""
     model_name = os.getenv("OLLAMA_MODEL", "gemma3:12b")
-    llm = dspy.OllamaLocal(model=model_name, max_tokens=2048)
+    
+    # Use LM class with ollama provider for DSPy 2.6.27
+    llm = dspy.LM(model=f"ollama/{model_name}", max_tokens=2048)
     dspy.settings.configure(lm=llm)
     logger.info(f"DSPy configured with Ollama model: {model_name}")
 
@@ -41,6 +43,7 @@ def setup_environment() -> DspyCallbackHandler | None:
         return DspyCallbackHandler()
     logger.warning("Langfuse credentials not found. Skipping tracing.")
     return None
+
 
 def update_results_summary(strategy_name: str, score: float, trace_url: str, optimized_path: str):
     """Reads, updates, and writes the central results summary JSON."""
@@ -58,7 +61,7 @@ def update_results_summary(strategy_name: str, score: float, trace_url: str, opt
     }
 
     with open(summary_path, 'w') as f:
-        json.dump(summary_data, f, indent=4)
+        json.dump(summary_data, f, indent=2)
     logger.info(f"Updated results summary at {summary_path}")
 
 
