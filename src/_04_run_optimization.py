@@ -10,6 +10,17 @@ It brings together all components to:
 5.  Capture the evaluation score and Langfuse trace URL.
 6.  Save the optimized program to a unique JSON file.
 7.  Update a central `results_summary.json` with the outcome of the experiment.
+
+This script serves as the entry point for running optimization experiments with
+different prompting strategies. It orchestrates the entire pipeline from data
+loading to model optimization and results storage.
+
+Usage:
+    .\.venv\Scripts\python.exe src\_04_run_optimization.py <strategy_name>
+
+Example:
+    .\.venv\Scripts\python.exe src\_04_run_optimization.py naive
+    .\.venv\Scripts\python.exe src\_04_run_optimization.py cot
 """
 
 import argparse
@@ -32,8 +43,41 @@ from settings import RESULTS_DIR, logger, setup_environment
 
 def update_results_summary(
     strategy_name: str, score: float, trace_url: str, optimized_path: str
-):
-    """Reads, updates, and writes the central results summary JSON."""
+) -> None:
+    """
+    Updates the central results summary JSON file with optimization results.
+
+    This function maintains a persistent record of all optimization experiments
+    by reading the existing results summary, adding the new result, and writing
+    it back to disk. Each entry includes the strategy name, final score, trace
+    URL for debugging, and the path to the optimized model.
+
+    Args:
+        strategy_name (str): The name of the prompting strategy that was optimized
+                           (e.g., 'naive', 'chain_of_thought', 'plan_and_solve').
+        score (float): The final evaluation score achieved by the optimized model,
+                      typically a value between 0.0 and 1.0 representing accuracy.
+        trace_url (str): The Langfuse trace URL for debugging and analysis,
+                        or "N/A" if not available.
+        optimized_path (str): The file path where the optimized DSPy program
+                             was saved (e.g., 'results/optimized_naive.json').
+
+    Returns:
+        None
+
+    Side Effects:
+        - Creates or updates 'results/results_summary.json'
+        - Logs the update operation
+
+    Example:
+        >>> update_results_summary(
+        ...     strategy_name="naive",
+        ...     score=0.427,
+        ...     trace_url="http://localhost:3000/trace/123",
+        ...     optimized_path="results/optimized_naive.json"
+        ... )
+        # Creates/updates results_summary.json with the new entry
+    """
     summary_path = RESULTS_DIR / "results_summary.json"
     summary_data = {}
     if summary_path.exists():
@@ -52,8 +96,46 @@ def update_results_summary(
     logger.info(f"Updated results summary at {summary_path}")
 
 
-def main(strategy_name: str):
-    """Main function to run the optimization pipeline for a given strategy."""
+def main(strategy_name: str) -> None:
+    """
+    Main orchestration function that runs the complete DSPy optimization pipeline.
+
+    This function coordinates all aspects of the optimization process:
+    1. Sets up the DSPy environment and Langfuse logging
+    2. Loads and splits the vehicle complaints dataset
+    3. Applies the specified prompting strategy to the extraction signature
+    4. Runs DSPy's BootstrapFewShot optimizer to improve the model
+    5. Evaluates the optimized model on a held-out validation set
+    6. Saves the optimized program and updates the results summary
+
+    Args:
+        strategy_name (str): The name of the prompting strategy to use for
+                           optimization. Must be one of the strategies defined
+                           in PROMPT_STRATEGIES (e.g., 'naive', 'chain_of_thought',
+                           'plan_and_solve', 'self_refine', 'contrastive_cot').
+
+    Returns:
+        None
+
+    Raises:
+        SystemExit: Always exits with code 0 on successful completion, or code 1
+                   on failure. This prevents background processes from continuing.
+
+    Side Effects:
+        - Configures DSPy with the specified LLM and settings
+        - Creates optimized model files in the results directory
+        - Updates the central results summary JSON file
+        - Logs detailed progress information throughout the process
+
+    Example:
+        >>> main("naive")
+        # Runs optimization with naive prompting strategy
+        # Outputs: Final evaluation score, saved model path, results summary
+
+    Note:
+        This function includes explicit cleanup and exit procedures to prevent
+        DSPy background processes from continuing after optimization completes.
+    """
     logger.info(f"--- Starting optimization for strategy: {strategy_name} ---")
 
     langfuse_handler = setup_environment()
