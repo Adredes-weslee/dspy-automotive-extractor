@@ -1,4 +1,4 @@
-"""
+r"""
 _04_run_optimization.py
 
 This is the main orchestration script for the DSPy optimization pipeline.
@@ -27,6 +27,8 @@ import argparse
 import gc
 import json
 import sys
+import threading
+import time
 from datetime import datetime
 
 import dspy
@@ -190,14 +192,46 @@ def main(strategy_name: str) -> None:
 
     update_results_summary(strategy_name, final_score, trace_url, str(output_path))
 
-    # NEW: Add explicit cleanup and exit
     logger.info(f"--- Optimization complete for strategy: {strategy_name} ---")
     logger.info("Script finished successfully.")
+
+    # Enhanced thread cleanup
+    logger.info("Waiting for background threads to complete...")
+
+    # Step 1: Wait for active threads
+    active_threads = threading.active_count()
+    max_wait = 60  # Increased timeout
+    wait_time = 0
+
+    while active_threads > 1 and wait_time < max_wait:
+        time.sleep(2)  # Longer intervals
+        wait_time += 2
+        current_threads = threading.active_count()
+        if current_threads != active_threads:
+            logger.info(f"Active threads: {current_threads}")
+            active_threads = current_threads
+
+    # Step 2: Force LiteLLM cleanup
+    try:
+        import litellm
+
+        # Clear any pending callbacks
+        litellm._async_success_callback = []
+        litellm._success_callback = []
+        logger.info("Cleared LiteLLM callbacks")
+    except Exception as e:
+        logger.warning(f"LiteLLM cleanup warning: {e}")
+
+    # Step 3: Final thread check
+    final_threads = threading.active_count()
+    logger.info(f"Final thread count: {final_threads}")
+
+    logger.info("Background cleanup complete")
 
     # Force cleanup
     gc.collect()
 
-    # Explicit exit to prevent background processes
+    # Clean exit
     logger.info("Exiting cleanly...")
     sys.exit(0)
 
