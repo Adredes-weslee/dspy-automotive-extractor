@@ -29,7 +29,7 @@
     "program_path": "C:\\Users\\tcmk_\\Downloads\\dspy-automotive-extractor\\results\\optimized_contrastive_cot_without_reasoning.json",
     "timestamp": "2025-06-11T09:44:14.385414"
   },
-    "naive_with_reasoning": {
+  "naive_with_reasoning": {
     "final_score": 46.67,
     "trace_url": null,
     "program_path": "C:\\Users\\tcmk_\\Downloads\\dspy-automotive-extractor\\results\\optimized_naive_with_reasoning.json",
@@ -40,5 +40,23 @@
     "trace_url": null,
     "program_path": "C:\\Users\\tcmk_\\Downloads\\dspy-automotive-extractor\\results\\optimized_cot_with_reasoning.json",
     "timestamp": "2025-06-11T18:20:05.757380"
+  },
+  "plan_and_solve_with_reasoning": {
+    "final_score": 46.0,
+    "trace_url": null,
+    "program_path": "C:\\Users\\tcmk_\\Downloads\\dspy-automotive-extractor\\results\\optimized_plan_and_solve_with_reasoning.json",
+    "timestamp": "2025-06-12T00:08:59.392031"
+  },
+  "self_refine_with_reasoning": {
+    "final_score": 45.33,
+    "trace_url": null,
+    "program_path": "C:\\Users\\tcmk_\\Downloads\\dspy-automotive-extractor\\results\\optimized_self_refine_with_reasoning.json",
+    "timestamp": "2025-06-12T01:42:37.047531"
+  },
+  "contrastive_cot_with_reasoning": {
+    "final_score": 51.33,
+    "trace_url": null,
+    "program_path": "C:\\Users\\tcmk_\\Downloads\\dspy-automotive-extractor\\results\\optimized_contrastive_cot_with_reasoning.json",
+    "timestamp": "2025-06-12T02:58:07.610606"
   }
 }
