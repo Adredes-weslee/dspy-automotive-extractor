@@ -22,5 +22,11 @@
     "trace_url": null,
     "program_path": "C:\\Users\\tcmk_\\Downloads\\dspy-automotive-extractor\\results\\optimized_self_refine.json",
     "timestamp": "2025-06-11T08:48:48.211844"
+  },
+  "contrastive_cot": {
+    "final_score": 42.67,
+    "trace_url": null,
+    "program_path": "C:\\Users\\tcmk_\\Downloads\\dspy-automotive-extractor\\results\\optimized_contrastive_cot.json",
+    "timestamp": "2025-06-11T09:44:14.385414"
   }
 }
