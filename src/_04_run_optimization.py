@@ -195,44 +195,56 @@ def main(strategy_name: str) -> None:
     logger.info(f"--- Optimization complete for strategy: {strategy_name} ---")
     logger.info("Script finished successfully.")
 
-    # Enhanced thread cleanup
-    logger.info("Waiting for background threads to complete...")
+    # Nuclear thread cleanup
+    logger.info("Initiating nuclear thread cleanup...")
 
-    # Step 1: Wait for active threads
-    active_threads = threading.active_count()
-    max_wait = 60  # Increased timeout
-    wait_time = 0
-
-    while active_threads > 1 and wait_time < max_wait:
-        time.sleep(2)  # Longer intervals
-        wait_time += 2
-        current_threads = threading.active_count()
-        if current_threads != active_threads:
-            logger.info(f"Active threads: {current_threads}")
-            active_threads = current_threads
-
-    # Step 2: Force LiteLLM cleanup
+    # Step 1: Disable all LiteLLM callbacks immediately
     try:
         import litellm
 
-        # Clear any pending callbacks
         litellm._async_success_callback = []
         litellm._success_callback = []
-        logger.info("Cleared LiteLLM callbacks")
+        litellm._async_failure_callback = []
+        litellm._failure_callback = []
+        # Force close any active sessions
+        if hasattr(litellm, "client"):
+            litellm.client = None
+        logger.info("Disabled all LiteLLM callbacks and sessions")
     except Exception as e:
         logger.warning(f"LiteLLM cleanup warning: {e}")
 
-    # Step 3: Final thread check
+    # Step 2: Wait for threads with progress updates
+    max_wait = 120  # 2 minutes max
+    wait_time = 0
+    initial_threads = threading.active_count()
+
+    logger.info(f"Initial thread count: {initial_threads}")
+
+    while threading.active_count() > 1 and wait_time < max_wait:
+        time.sleep(5)  # 5-second intervals
+        wait_time += 5
+        current_threads = threading.active_count()
+        logger.info(f"Thread count after {wait_time}s: {current_threads}")
+
+        # Force garbage collection every 30 seconds
+        if wait_time % 30 == 0:
+            gc.collect()
+            logger.info("Forced garbage collection")
+
+    # Step 3: Final status
     final_threads = threading.active_count()
     logger.info(f"Final thread count: {final_threads}")
 
+    if final_threads > 1:
+        logger.warning(
+            f"Still have {final_threads - 1} background threads after {max_wait}s"
+        )
+        logger.warning("These are likely Langfuse/LiteLLM background tasks")
+
     logger.info("Background cleanup complete")
+    logger.info("=== EVALUATION FINISHED SUCCESSFULLY ===")
 
-    # Force cleanup
-    gc.collect()
-
-    # Clean exit
-    logger.info("Exiting cleanly...")
+    # Force exit to prevent any further execution
     sys.exit(0)
 
 
