@@ -1,4 +1,4 @@
-"""
+r"""
 app.py
 
 This script creates a Streamlit web application that serves as an interactive
@@ -98,7 +98,9 @@ def load_optimized_program(path: str) -> Optional[ExtractionModule]:
     """
     try:
         # Configure a dummy LLM for loading, it will be replaced later
-        dspy.settings.configure(lm=dspy.OllamaLocal(model="qwen3:4b"))
+        model_name = os.getenv("OLLAMA_MODEL", "gemma3:12b")
+        llm = dspy.LM(model=f"ollama/{model_name}")
+        dspy.settings.configure(lm=llm)
         program = ExtractionModule()
         program.load(path)
         logger.info(f"Loaded optimized program from {path}")
@@ -180,8 +182,8 @@ else:
             if best_program and narrative_input:
                 try:
                     # Configure the LLM for inference
-                    model_name = os.getenv("OLLAMA_MODEL", "qwen3:4b")
-                    llm = dspy.OllamaLocal(model=model_name)
+                    model_name = os.getenv("OLLAMA_MODEL", "gemma3:12b")
+                    llm = dspy.LM(model=f"ollama/{model_name}")
                     dspy.settings.configure(lm=llm)
                     st.success(
                         f"Connected to Ollama model: `{model_name}` for inference."
@@ -189,10 +191,41 @@ else:
 
                     with st.spinner("Running extraction..."):
                         prediction = best_program(narrative=narrative_input)
-                        st.json(prediction.vehicle_info.model_dump_json(indent=2))
+
+                        # Display results in a more readable format
+                        st.subheader("🚗 Extracted Vehicle Information")
+
+                        if hasattr(prediction, "vehicle_info"):
+                            vehicle_data = prediction.vehicle_info
+                            if hasattr(vehicle_data, "model_dump"):
+                                # For Pydantic models
+                                data = vehicle_data.model_dump()
+                            else:
+                                # For dict-like objects
+                                data = (
+                                    dict(vehicle_data)
+                                    if hasattr(vehicle_data, "__dict__")
+                                    else vehicle_data
+                                )
+
+                            # Display in columns for better UX
+                            col1, col2, col3 = st.columns(3)
+                            with col1:
+                                st.metric("Make", data.get("make", "N/A"))
+                            with col2:
+                                st.metric("Model", data.get("model", "N/A"))
+                            with col3:
+                                st.metric("Year", data.get("year", "N/A"))
+
+                            # Show full JSON for debugging
+                            with st.expander("View Raw JSON Output"):
+                                st.json(data)
+                        else:
+                            st.json(str(prediction))
 
                 except Exception as e:
                     st.error(f"Failed to run inference: {e}")
+                    logger.error(f"Inference error: {e}")
             else:
                 st.error("Could not load the best-performing program.")
     else:
