@@ -16,5 +16,11 @@
     "trace_url": null,
     "program_path": "C:\\Users\\tcmk_\\Downloads\\dspy-automotive-extractor\\results\\optimized_plan_and_solve.json",
     "timestamp": "2025-06-11T07:52:48.657549"
+  },
+  "self_refine": {
+    "final_score": 43.33,
+    "trace_url": null,
+    "program_path": "C:\\Users\\tcmk_\\Downloads\\dspy-automotive-extractor\\results\\optimized_self_refine.json",
+    "timestamp": "2025-06-11T08:48:48.211844"
   }
 }
