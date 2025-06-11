@@ -1,4 +1,4 @@
-"""
+r"""
 verify_gpu.py
 
 This script provides comprehensive verification of GPU/CUDA availability and system

@@ -1,4 +1,4 @@
-"""
+r"""
 settings.py
 
 This module centralizes all project configurations and environment setup for the

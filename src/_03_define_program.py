@@ -1,4 +1,4 @@
-"""
+r"""
 _03_define_program.py
 
 This script defines the core components of our DSPy program for vehicle information extraction:
