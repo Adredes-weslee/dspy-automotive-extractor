@@ -1,4 +1,4 @@
-"""
+r"""
 _02_define_schema.py
 
 This script defines the data structures and prompting strategies for our LLM pipeline. It includes:
@@ -76,6 +76,7 @@ class ExtractionSignature(dspy.Signature):
 
     Attributes:
         narrative (str): Input field containing the unstructured vehicle complaint text.
+        reasoning (str): Output field containing the step-by-step thought process.
         vehicle_info (VehicleInfo): Output field containing the extracted structured data.
 
     Note:
@@ -85,6 +86,9 @@ class ExtractionSignature(dspy.Signature):
 
     narrative: str = dspy.InputField(
         desc="A detailed, unstructured description of a vehicle complaint."
+    )
+    reasoning: str = dspy.OutputField(
+        desc="Step-by-step reasoning process showing how you identified the vehicle information. Explain your thought process, what clues you found, and any uncertainties."
     )
     vehicle_info: VehicleInfo = dspy.OutputField(
         desc="The structured vehicle information."
@@ -142,6 +146,8 @@ Examples:
 - "KIA NIRO 2023MY" → Make: KIA, Model: NIRO, Year: 2023
 - "Ford F-150 from 2021" → Make: Ford, Model: F-150, Year: 2021
 
+First, provide your reasoning explaining what text clues you found for each field and any uncertainties you encountered. Then extract the structured data.
+
 Use "UNKNOWN" if any information is not clearly mentioned."""
 
 
@@ -167,6 +173,13 @@ class ChainOfThought(PromptStrategy):
 1. MAKE: Search for vehicle manufacturer names like Tesla, Toyota, Ford, BMW, etc.
 2. MODEL: Look for specific model names like Model 3, Camry, F-150, etc.
 3. YEAR: Find the model year, often mentioned as a 4-digit number (2019-2025).
+
+First, provide your reasoning showing your thought process, then extract the structured data.
+
+In your reasoning, explain:
+- What specific text clues you found for each field
+- Any ambiguities or uncertainties you encountered
+- Why you made your final decisions
 
 Be careful to distinguish between:
 - Make vs Model (e.g., "Tesla Model 3" → Make="Tesla", Model="Model 3")
@@ -198,7 +211,15 @@ Step 1: Identify the vehicle manufacturer (make) - look for brand names
 Step 2: Identify the specific model - look for model names after the make
 Step 3: Identify the year - look for 4-digit years, often before or after the make/model
 
-Execution: Now I'll carefully read the text and extract each piece of information, using "UNKNOWN" if any detail is not clearly mentioned."""
+Execution: Now I'll carefully read the text and extract each piece of information, using "UNKNOWN" if any detail is not clearly mentioned.
+
+Provide your reasoning showing:
+- How you planned your approach
+- What specific evidence you found during execution
+- Any challenges or ambiguities you encountered
+- How your plan helped you reach your final decisions
+
+Then provide the extracted structured data."""
 
 
 class SelfRefine(PromptStrategy):
@@ -226,7 +247,14 @@ Step 2 - CRITIQUE: Review your draft extraction:
 - Is the year a valid 4-digit vehicle year (2015-2025)?
 - Did I confuse any numbers (mileage, speed) with the model year?
 
-Step 3 - REFINE: Based on your critique, provide the final, corrected extraction. Use "UNKNOWN" for any field you cannot confidently determine."""
+Step 3 - REFINE: Based on your critique, provide the final, corrected extraction. Use "UNKNOWN" for any field you cannot confidently determine.
+
+Show your complete reasoning process including:
+- Your initial draft and the evidence you found
+- Your self-critique and what issues you identified
+- Your final refinement and what you changed and why
+
+Then provide the final extracted structured data."""
 
 
 class ContrastiveCoT(PromptStrategy):
@@ -260,7 +288,15 @@ Wrong Analysis: "The year must be 65 because that's a number I see"
 Correct Analysis: "65 mph is speed, 50,000 is mileage, no model year mentioned"
 Result: Make=UNKNOWN, Model=UNKNOWN, Year=UNKNOWN
 
-Now analyze the following text using good reasoning principles."""
+Now analyze the following text using good reasoning principles.
+
+Provide your reasoning showing:
+- How you applied the good reasoning principles
+- What relevant vs irrelevant details you identified
+- How you avoided the bad reasoning patterns shown above
+- Your step-by-step analysis leading to your conclusions
+
+Then provide the extracted structured data."""
 
 
 # Factory to get a strategy by name
