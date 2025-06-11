@@ -97,7 +97,7 @@ git clone https://github.com/Adredes-weslee/dspy-automotive-extractor.git
 cd dspy-automotive-extractor
 ```
 
-### Step 2: Download the Dataset
+### Step 2a: Download the Dataset
 Create the `data` directory and download the NHTSA complaints dataset.
 
 ```powershell
@@ -105,6 +105,22 @@ mkdir data
 # This command downloads the file and saves it as NHTSA_complaints.csv in the data folder
 curl.exe -L -k "https://static.nhtsa.gov/odi/ffdd/sgo-2021-01/SGO-2021-01_Incident_Reports_ADAS.csv" -o "data/NHTSA_complaints.csv"
 ```
+
+### Step 2b: Download the Full 2021 Dataset
+Create the `data` directory and download all 12 months of 2021 NHTSA complaints.
+
+```powershell
+mkdir data
+
+# Download all months of 2021 (this will take a few minutes)
+for ($month = 1; $month -le 12; $month++) {
+    $monthStr = $month.ToString("00")
+    $url = "https://static.nhtsa.gov/odi/ffdd/sgo-2021-$monthStr/SGO-2021-$monthStr" + "_Incident_Reports_ADAS.csv"
+    $filename = "data/NHTSA_complaints_2021_$monthStr.csv"
+    curl.exe -L -k $url -o $filename
+}
+
+
 
 ### Step 3: Download Ollama Models
 This project supports multiple models for different hardware capabilities.
