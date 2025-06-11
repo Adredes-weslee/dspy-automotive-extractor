@@ -46,7 +46,7 @@ import streamlit as st
 from _03_define_program import ExtractionModule
 
 # Use settings from the central settings.py module
-from settings import RESULTS_DIR, logger
+from settings import RESULTS_DIR, logger, setup_environment
 
 # --- Streamlit Page Configuration ---
 st.set_page_config(
@@ -97,10 +97,11 @@ def load_optimized_program(path: str) -> Optional[ExtractionModule]:
         improving performance for repeated demo usage.
     """
     try:
-        # Configure a dummy LLM for loading, it will be replaced later
+        # Configure DSPy once when loading the program
         model_name = os.getenv("OLLAMA_MODEL", "gemma3:12b")
         llm = dspy.LM(model=f"ollama/{model_name}")
         dspy.settings.configure(lm=llm)
+
         program = ExtractionModule()
         program.load(path)
         logger.info(f"Loaded optimized program from {path}")
@@ -108,6 +109,71 @@ def load_optimized_program(path: str) -> Optional[ExtractionModule]:
     except Exception as e:
         st.error(f"Failed to load program from {path}: {e}")
         return None
+
+
+# Configure DSPy globally at app startup
+@st.cache_resource
+def configure_dspy():
+    """Configure DSPy with Langfuse logging for Streamlit app startup.
+
+    This function sets up the DSPy framework with Ollama language model integration
+    and Langfuse observability logging for the Streamlit dashboard application.
+    It uses Streamlit's caching mechanism to ensure configuration occurs only once
+    per session, preventing redundant setup calls and potential threading issues.
+
+    The function performs the following initialization steps:
+    1. Sets up Langfuse logging environment and handlers via setup_environment()
+    2. Retrieves the Ollama model name from environment variables with fallback
+    3. Creates a DSPy language model instance pointing to the local Ollama service
+    4. Configures DSPy global settings with the initialized language model
+    5. Logs successful configuration for debugging and monitoring purposes
+
+    Environment Variables:
+        OLLAMA_MODEL (str, optional): Name of the Ollama model to use for inference.
+                                     Defaults to "gemma3:12b" if not specified.
+
+    Returns:
+        tuple[dspy.LM, langfuse.LangfuseHandler]: A tuple containing:
+            - llm: Configured DSPy language model instance ready for inference
+            - langfuse_handler: Langfuse logging handler for trace collection
+
+    Raises:
+        ConnectionError: If Ollama service is not running or unreachable
+        EnvironmentError: If required environment variables are missing
+        ConfigurationError: If DSPy configuration fails due to invalid settings
+
+    Side Effects:
+        - Configures global DSPy settings (dspy.settings.configure)
+        - Initializes Langfuse logging handlers and callbacks
+        - Creates HTTP connections to local Ollama service
+        - Writes configuration success message to application logs
+
+    Example:
+        >>> llm, langfuse_handler = configure_dspy()
+        >>> # DSPy is now ready for inference with Langfuse logging
+        >>> prediction = my_program(input_text="2023 Tesla Model Y issue")
+        >>> # Traces will appear in Langfuse dashboard at localhost:3000
+
+    Note:
+        This function is decorated with @st.cache_resource to ensure that
+        DSPy configuration occurs exactly once per Streamlit session, which
+        prevents the "dspy.settings can only be changed by the thread that
+        initially configured it" error in multi-threaded Streamlit environments.
+
+        The function assumes that:
+        - Ollama service is running on localhost:11434 (default port)
+        - Langfuse is configured and accessible (setup_environment() succeeds)
+        - The specified Ollama model is downloaded and available locally
+    """
+    # Set up Langfuse logging
+    langfuse_handler = setup_environment()
+
+    model_name = os.getenv("OLLAMA_MODEL", "gemma3:12b")
+    llm = dspy.LM(model=f"ollama/{model_name}")
+    dspy.settings.configure(lm=llm)
+
+    logger.info("DSPy configured with Langfuse logging for Streamlit app")
+    return llm, langfuse_handler
 
 
 # --- Main Application UI ---
@@ -134,7 +200,6 @@ else:
             {
                 "Strategy": strategy.replace("_", " ").title(),
                 "Final F1 Score": data.get("final_score", "N/A"),
-                "Trace URL": data.get("trace_url", "N/A"),
                 "Timestamp": data.get("timestamp", "N/A"),
             }
         )
@@ -142,11 +207,6 @@ else:
     df = pd.DataFrame(df_data)
     st.dataframe(
         df,
-        column_config={
-            "Trace URL": st.column_config.LinkColumn(
-                "🔗 View Trace", display_text="View on Langfuse"
-            ),
-        },
         use_container_width=True,
         hide_index=True,
     )
@@ -157,7 +217,10 @@ st.header("🔬 Live Demo")
 if not summary_data:
     st.info("Run an optimization experiment to enable the live demo.")
 else:
-    # Find the best performing strategy to use for the demo
+    # Configure DSPy once
+    llm = configure_dspy()
+
+    # Find the best performing strategy
     best_strategy = max(
         summary_data, key=lambda k: summary_data[k].get("final_score", 0)
     )
@@ -181,12 +244,9 @@ else:
         if st.button("Extract Vehicle Info"):
             if best_program and narrative_input:
                 try:
-                    # Configure the LLM for inference
-                    model_name = os.getenv("OLLAMA_MODEL", "gemma3:12b")
-                    llm = dspy.LM(model=f"ollama/{model_name}")
-                    dspy.settings.configure(lm=llm)
+                    # DSPy is already configured - no need to reconfigure
                     st.success(
-                        f"Connected to Ollama model: `{model_name}` for inference."
+                        f"Using Ollama model: `{os.getenv('OLLAMA_MODEL', 'gemma3:12b')}` for inference."
                     )
 
                     with st.spinner("Running extraction..."):
@@ -198,10 +258,8 @@ else:
                         if hasattr(prediction, "vehicle_info"):
                             vehicle_data = prediction.vehicle_info
                             if hasattr(vehicle_data, "model_dump"):
-                                # For Pydantic models
                                 data = vehicle_data.model_dump()
                             else:
-                                # For dict-like objects
                                 data = (
                                     dict(vehicle_data)
                                     if hasattr(vehicle_data, "__dict__")
