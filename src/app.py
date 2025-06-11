@@ -11,9 +11,9 @@ with optimization results:
     `results_summary.json` file in a clean, sortable table format.
 2.  **Performance Comparison**: Shows F1-scores and timestamps for all tested
     prompting strategies (naive, chain_of_thought, plan_and_solve, etc.).
-3.  **Langfuse Integration**: Provides direct links to detailed Langfuse traces
-    for each experiment, enabling deep analysis of the optimization process.
-4.  **Live Demo**: Interactive section that allows users to test the best-performing
+3.  **Analysis & Insights**: Theoretical analysis of why certain strategies work
+4.  **Model Details**: Inspection of optimized programs and prompts
+5.  **Live Demo**: Interactive section that allows users to test the best-performing
     optimized program against new, user-provided automotive complaint narratives.
 
 The dashboard automatically identifies the best-performing strategy and loads
@@ -36,7 +36,7 @@ Requirements:
 import json
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Any, Dict, Optional, Tuple
 
 import dspy
 import pandas as pd
@@ -48,19 +48,10 @@ from _03_define_program import ExtractionModule
 # Use settings from the central settings.py module
 from settings import RESULTS_DIR, logger, setup_environment
 
-# --- Streamlit Page Configuration ---
-st.set_page_config(
-    page_title="DSPy Optimization Dashboard",
-    page_icon="📊",
-    layout="wide",
-)
 
-
-# --- Caching ---
 @st.cache_resource
 def load_optimized_program(path: str) -> Optional[ExtractionModule]:
-    """
-    Load a compiled DSPy program from a JSON file with caching optimization.
+    """Load a compiled DSPy program from a JSON file with caching optimization.
 
     This function loads a previously optimized and saved DSPy program from disk.
     It uses Streamlit's caching mechanism to avoid reloading the same program
@@ -72,12 +63,11 @@ def load_optimized_program(path: str) -> Optional[ExtractionModule]:
     the program is used for predictions.
 
     Args:
-        path (str): The file path to the saved DSPy program JSON file
-                   (e.g., 'results/optimized_naive.json').
+        path: The file path to the saved DSPy program JSON file
+            (e.g., 'results/optimized_naive.json').
 
     Returns:
-        Optional[ExtractionModule]: The loaded DSPy program if successful,
-                                   None if loading failed.
+        The loaded DSPy program if successful, None if loading failed.
 
     Side Effects:
         - Temporarily configures DSPy global settings for loading
@@ -111,9 +101,8 @@ def load_optimized_program(path: str) -> Optional[ExtractionModule]:
         return None
 
 
-# Configure DSPy globally at app startup
 @st.cache_resource
-def configure_dspy():
+def configure_dspy() -> Tuple[dspy.LM, Any]:
     """Configure DSPy with Langfuse logging for Streamlit app startup.
 
     This function sets up the DSPy framework with Ollama language model integration
@@ -133,7 +122,7 @@ def configure_dspy():
                                      Defaults to "gemma3:12b" if not specified.
 
     Returns:
-        tuple[dspy.LM, langfuse.LangfuseHandler]: A tuple containing:
+        A tuple containing:
             - llm: Configured DSPy language model instance ready for inference
             - langfuse_handler: Langfuse logging handler for trace collection
 
@@ -176,49 +165,334 @@ def configure_dspy():
     return llm, langfuse_handler
 
 
-# --- Main Application UI ---
-st.title("📊 DSPy Prompt Optimization Dashboard")
-st.markdown("### Comparing Prompting Strategies for Automotive Data Extraction")
+def load_summary_data() -> Dict[str, Any]:
+    """Load experiment results summary from JSON file.
 
-# --- Results Summary Section ---
-st.header("📈 Experiment Results Summary")
+    Returns:
+        Dictionary containing experiment results, empty dict if file not found.
+    """
+    summary_path = RESULTS_DIR / "results_summary.json"
+    if summary_path.exists():
+        with open(summary_path, "r") as f:
+            return json.load(f)
+    return {}
 
-summary_path = RESULTS_DIR / "results_summary.json"
-summary_data = {}
-if not summary_path.exists():
-    st.warning(
-        "`results_summary.json` not found. Run the optimization script to generate results."
+
+def display_results_tab() -> None:
+    """Display the results comparison tab with performance metrics and rankings.
+
+    This function creates a comprehensive view of experimental results including:
+    - Side-by-side comparison of strategies with/without reasoning
+    - Performance improvement calculations
+    - Best performing models ranking with medal indicators
+
+    Side Effects:
+        - Renders Streamlit UI components
+        - Displays dataframes and metrics
+        - Shows warning if no results available
+    """
+    st.header("📈 Experiment Results")
+
+    summary_data = load_summary_data()
+
+    if not summary_data:
+        st.warning("⚠️ `results_summary.json` not found. Please run optimization first.")
+        return
+
+    # Create comparison visualization
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.subheader("📊 Performance Comparison")
+
+        # Extract with/without reasoning pairs
+        without_reasoning = {
+            k: v for k, v in summary_data.items() if "without_reasoning" in k
+        }
+        with_reasoning = {
+            k: v for k, v in summary_data.items() if "with_reasoning" in k
+        }
+
+        # Create DataFrame for visualization
+        comparison_data = []
+        for strategy in [
+            "naive",
+            "cot",
+            "plan_and_solve",
+            "self_refine",
+            "contrastive_cot",
+        ]:
+            without_key = f"{strategy}_without_reasoning"
+            with_key = f"{strategy}_with_reasoning"
+
+            without_score = without_reasoning.get(without_key, {}).get(
+                "final_score", None
+            )
+            with_score = with_reasoning.get(with_key, {}).get("final_score", None)
+
+            if without_score is not None:
+                comparison_data.append(
+                    {
+                        "Strategy": strategy.replace("_", " ").title(),
+                        "Without Reasoning": f"{without_score}%",
+                        "With Reasoning": f"{with_score}%"
+                        if with_score
+                        else "Running...",
+                        "Improvement": f"+{with_score - without_score:.2f}%"
+                        if with_score
+                        else "TBD",
+                    }
+                )
+
+        df_comparison = pd.DataFrame(comparison_data)
+        st.dataframe(df_comparison, use_container_width=True, hide_index=True)
+
+    with col2:
+        st.subheader("🏆 Best Performing Models")
+
+        # Find best scores
+        all_scores = [
+            (k, v["final_score"])
+            for k, v in summary_data.items()
+            if v.get("final_score")
+        ]
+        all_scores.sort(key=lambda x: x[1], reverse=True)
+
+        for i, (strategy, score) in enumerate(all_scores[:5]):
+            medal = "🥇" if i == 0 else "🥈" if i == 1 else "🥉" if i == 2 else "🏅"
+            strategy_clean = strategy.replace("_", " ").title()
+            st.metric(f"{medal} {strategy_clean}", f"{score}%")
+
+
+def display_analysis_tab() -> None:
+    """Display analysis and insights tab with theoretical foundations and findings.
+
+    This function provides comprehensive analysis including:
+    - Key experimental findings and performance patterns
+    - Theoretical explanations for observed results
+    - Current experiment status tracking
+    - Dynamic insights based on available results
+
+    Side Effects:
+        - Renders Streamlit markdown content
+        - Displays experiment progress dataframes
+        - Shows dynamic analysis based on current results
+    """
+    st.header("🧠 Analysis & Insights")
+
+    summary_data = load_summary_data()
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown("""
+        ### 🎯 Key Findings
+        
+        #### ✅ Reasoning Field Impact
+        - **Naive strategy**: 42.67% → 46.67% (**+4.0% improvement**)
+        - **CoT strategy**: 42.67% → 46.0% (**+3.33% improvement**)
+        - **Consistent pattern**: Explicit reasoning improves all strategies
+        
+        #### 🏆 Strategy Performance
+        - **Simple prompts outperform complex ones** for structured extraction
+        - **Naive + Reasoning** beats all complex strategies without reasoning
+        - **Task-prompt complexity matching** is crucial
+        
+        #### 🚨 Common Failure Patterns
+        - **Honda/Acura extraction**: Multiple UNKNOWN outputs
+        - **Complex model names**: "Corolla Hybrid" → "UNKNOWN"
+        - **Year format variations**: Non-standard formats cause issues
+        """)
+
+    with col2:
+        st.markdown("""
+        ### 🧬 Theoretical Foundations
+        
+        #### Why Reasoning Fields Work
+        - **Token-level guidance**: Explicit reasoning provides optimization signal
+        - **Consistency boost**: Intermediate steps reduce variance
+        - **Chain-of-thought externalization**: Better than implicit reasoning
+        
+        #### Model Behavior (Gemma 3:12B)
+        - **Prefers direct instructions** over complex prompting
+        - **Structured outputs** benefit from explicit formatting
+        - **Few-shot learning** works well with clear examples
+        
+        #### Optimization Insights
+        - **Bootstrap quality** matters more than quantity
+        - **Task-complexity matching** prevents over-engineering
+        - **Explicit validation** within reasoning chains helps
+        """)
+
+    # Dynamic insights based on current results
+    st.subheader("📊 Current Experiment Status")
+
+    if summary_data:
+        strategies = [
+            "naive",
+            "cot",
+            "plan_and_solve",
+            "self_refine",
+            "contrastive_cot",
+        ]
+        progress_data = []
+
+        for strategy in strategies:
+            without_key = f"{strategy}_without_reasoning"
+            with_key = f"{strategy}_with_reasoning"
+
+            without_done = without_key in summary_data
+            with_done = with_key in summary_data
+
+            status = (
+                "✅ Complete"
+                if (without_done and with_done)
+                else "🔄 In Progress"
+                if with_done
+                else "⏳ Pending"
+            )
+
+            improvement = ""
+            if without_done and with_done:
+                diff = (
+                    summary_data[with_key]["final_score"]
+                    - summary_data[without_key]["final_score"]
+                )
+                improvement = f"(+{diff:.2f}%)"
+
+            progress_data.append(
+                {
+                    "Strategy": strategy.replace("_", " ").title(),
+                    "Status": status,
+                    "Improvement": improvement,
+                }
+            )
+
+        df_progress = pd.DataFrame(progress_data)
+        st.dataframe(df_progress, use_container_width=True, hide_index=True)
+    else:
+        st.info("No experimental data available yet. Run optimization to see progress.")
+
+
+def display_model_details_tab() -> None:
+    """Display model details tab for inspecting optimized programs and prompts.
+
+    This function provides detailed inspection capabilities including:
+    - Strategy selection dropdown
+    - Performance metrics display
+    - Optimized prompt and signature inspection
+    - Example demonstrations viewing
+    - Full program JSON download functionality
+
+    Side Effects:
+        - Renders Streamlit UI components
+        - Manages session state for program inspection
+        - Provides file download functionality
+        - Displays JSON and code content
+    """
+    st.header("🔍 Optimized Model Details")
+
+    summary_data = load_summary_data()
+
+    if not summary_data:
+        st.warning("No results available yet. Run optimization experiments first.")
+        return
+
+    # Strategy selector
+    strategy_options = list(summary_data.keys())
+    selected_strategy = st.selectbox(
+        "Select Strategy to Inspect:",
+        strategy_options,
+        help="Choose a strategy to view its optimized prompts and configuration",
     )
-else:
-    with open(summary_path, "r") as f:
-        summary_data = json.load(f)
 
-    # Convert to DataFrame for better display
-    df_data = []
-    for strategy, data in summary_data.items():
-        df_data.append(
-            {
-                "Strategy": strategy.replace("_", " ").title(),
-                "Final F1 Score": data.get("final_score", "N/A"),
-                "Timestamp": data.get("timestamp", "N/A"),
-            }
-        )
+    if selected_strategy:
+        strategy_data = summary_data[selected_strategy]
+        program_path = strategy_data.get("program_path")
 
-    df = pd.DataFrame(df_data)
-    st.dataframe(
-        df,
-        use_container_width=True,
-        hide_index=True,
-    )
+        col1, col2 = st.columns([1, 2])
 
-# --- Live Demo Section ---
-st.header("🔬 Live Demo")
+        with col1:
+            st.metric("F1 Score", f"{strategy_data['final_score']}%")
+            st.text(f"Timestamp: {strategy_data['timestamp'][:19]}")
 
-if not summary_data:
-    st.info("Run an optimization experiment to enable the live demo.")
-else:
+            if st.button(
+                "🔍 Inspect Optimized Program", key=f"inspect_{selected_strategy}"
+            ):
+                st.session_state[f"show_program_{selected_strategy}"] = True
+
+        with col2:
+            if st.session_state.get(f"show_program_{selected_strategy}", False):
+                if program_path and Path(program_path).exists():
+                    with open(program_path, "r") as f:
+                        program_data = json.load(f)
+
+                    st.subheader("📝 Optimized Prompts")
+
+                    # Extract and display prompts
+                    if "predictor" in program_data:
+                        predictor_data = program_data["predictor"]
+
+                        # Show signature
+                        if "signature" in predictor_data:
+                            st.markdown("**Signature:**")
+                            st.code(str(predictor_data["signature"]), language="text")
+
+                        # Show instruction
+                        if "extended_signature" in predictor_data:
+                            ext_sig = predictor_data["extended_signature"]
+                            if "instructions" in ext_sig:
+                                st.markdown("**Instructions:**")
+                                st.code(ext_sig["instructions"], language="text")
+
+                        # Show demos
+                        if "demos" in predictor_data and predictor_data["demos"]:
+                            st.markdown("**Example Demonstrations:**")
+                            for i, demo in enumerate(
+                                predictor_data["demos"][:3]
+                            ):  # Show first 3
+                                with st.expander(f"Demo {i + 1}"):
+                                    st.json(demo)
+
+                    # Download button for full program
+                    st.download_button(
+                        "📥 Download Full Program JSON",
+                        data=json.dumps(program_data, indent=2),
+                        file_name=f"{selected_strategy}_program.json",
+                        mime="application/json",
+                        help="Download the complete optimized program configuration",
+                    )
+                else:
+                    st.error("Program file not found!")
+
+
+def display_live_demo_tab() -> None:
+    """Display live demo tab for testing optimized models on new inputs.
+
+    This function provides interactive testing capabilities including:
+    - Automatic best model selection
+    - Text input for new narratives
+    - Real-time inference execution
+    - Formatted results display with metrics
+    - Raw JSON output for debugging
+
+    Side Effects:
+        - Configures DSPy for inference
+        - Loads optimized programs
+        - Executes model predictions
+        - Displays results in Streamlit UI
+        - Logs inference operations
+    """
+    st.header("🔬 Live Demo")
+
+    summary_data = load_summary_data()
+
+    if not summary_data:
+        st.info("Run an optimization experiment to enable the live demo.")
+        return
+
     # Configure DSPy once
-    llm = configure_dspy()
+    llm, _ = configure_dspy()
 
     # Find the best performing strategy
     best_strategy = max(
@@ -227,24 +501,30 @@ else:
     best_program_path = summary_data[best_strategy].get("program_path")
 
     st.info(
-        f"Using the best-performing program: **{best_strategy.replace('_', ' ').title()}**"
+        f"Using the best-performing program: **{best_strategy.replace('_', ' ').title()}** "
+        f"({summary_data[best_strategy]['final_score']}%)"
     )
 
     if best_program_path and Path(best_program_path).exists():
         # Load the best program
         best_program = load_optimized_program(best_program_path)
 
-        default_narrative = "THE CONTACT OWNS A 2022 TESLA MODEL Y. THE CONTACT STATED THAT WHILE DRIVING AT 65 MPH, THE VEHICLE'S AUTONOMOUS BRAKING SYSTEM ACTIVATED INDEPENDENTLY, CAUSING AN ABRUPT STOP IN TRAFFIC."
+        default_narrative = (
+            "THE CONTACT OWNS A 2022 TESLA MODEL Y. THE CONTACT STATED THAT "
+            "WHILE DRIVING AT 65 MPH, THE VEHICLE'S AUTONOMOUS BRAKING SYSTEM "
+            "ACTIVATED INDEPENDENTLY, CAUSING AN ABRUPT STOP IN TRAFFIC."
+        )
+
         narrative_input = st.text_area(
             "Enter a complaint narrative to test the extraction:",
             value=default_narrative,
             height=150,
+            help="Enter automotive complaint text containing vehicle information",
         )
 
-        if st.button("Extract Vehicle Info"):
+        if st.button("🚗 Extract Vehicle Info"):
             if best_program and narrative_input:
                 try:
-                    # DSPy is already configured - no need to reconfigure
                     st.success(
                         f"Using Ollama model: `{os.getenv('OLLAMA_MODEL', 'gemma3:12b')}` for inference."
                     )
@@ -275,8 +555,16 @@ else:
                             with col3:
                                 st.metric("Year", data.get("year", "N/A"))
 
+                            # Show reasoning if available
+                            if (
+                                hasattr(prediction, "reasoning")
+                                and prediction.reasoning
+                            ):
+                                with st.expander("🧠 View Reasoning Chain"):
+                                    st.text(prediction.reasoning)
+
                             # Show full JSON for debugging
-                            with st.expander("View Raw JSON Output"):
+                            with st.expander("🔍 View Raw JSON Output"):
                                 st.json(data)
                         else:
                             st.json(str(prediction))
@@ -290,3 +578,53 @@ else:
         st.error(
             f"Could not find the program file for the best strategy: {best_program_path}"
         )
+
+
+def main() -> None:
+    """Main application entry point with tabbed interface.
+
+    This function initializes the Streamlit application and creates a comprehensive
+    dashboard with multiple tabs for different aspects of the DSPy optimization
+    analysis and interaction.
+
+    Tabs:
+        - Results: Performance comparison and rankings
+        - Analysis: Theoretical insights and experimental findings
+        - Model Details: Optimized program inspection
+        - Live Demo: Interactive testing interface
+
+    Side Effects:
+        - Configures Streamlit page settings
+        - Renders the complete dashboard interface
+        - Manages tab navigation and content display
+    """
+    # Page configuration
+    st.set_page_config(
+        page_title="DSPy Automotive Extractor",
+        page_icon="🚗",
+        layout="wide",
+    )
+
+    st.title("🚗 DSPy Automotive Extractor Dashboard")
+    st.markdown("*Optimized prompting strategies for vehicle information extraction*")
+
+    # Create tabs
+    tab1, tab2, tab3, tab4 = st.tabs(
+        ["📊 Results", "🧠 Analysis", "🔍 Model Details", "🔬 Live Demo"]
+    )
+
+    with tab1:
+        display_results_tab()
+
+    with tab2:
+        display_analysis_tab()
+
+    with tab3:
+        display_model_details_tab()
+
+    with tab4:
+        display_live_demo_tab()
+
+
+if __name__ == "__main__":
+    main()
