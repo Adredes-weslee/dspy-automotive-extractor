@@ -58,5 +58,133 @@
     "trace_url": null,
     "program_path": "C:\\Users\\tcmk_\\Downloads\\dspy-automotive-extractor\\results\\optimized_contrastive_cot_with_reasoning.json",
     "timestamp": "2025-06-12T02:58:07.610606"
+  },
+  "contrastive_cot_domain_expertise_bootstrap": {
+    "final_score": 49.33,
+    "trace_url": null,
+    "program_path": "C:\\Users\\tcmk_\\Downloads\\dspy-automotive-extractor\\results\\optimized_contrastive_cot_domain_expertise_bootstrap.json",
+    "optimizer_type": "bootstrap",
+    "timestamp": "2025-06-12T23:53:42.972594",
+    "strategy_type": "meta_optimized"
+  },
+  "naive_specificity_bootstrap": {
+    "final_score": 47.33,
+    "trace_url": null,
+    "program_path": "C:\\Users\\tcmk_\\Downloads\\dspy-automotive-extractor\\results\\optimized_naive_specificity_bootstrap.json",
+    "optimizer_type": "bootstrap",
+    "timestamp": "2025-06-12T07:27:40.065010",
+    "strategy_type": "meta_optimized"
+  },
+  "naive_error_prevention_bootstrap": {
+    "final_score": 46.67,
+    "trace_url": null,
+    "program_path": "C:\\Users\\tcmk_\\Downloads\\dspy-automotive-extractor\\results\\optimized_naive_error_prevention_bootstrap.json",
+    "optimizer_type": "bootstrap",
+    "timestamp": "2025-06-12T08:25:51.979741",
+    "strategy_type": "meta_optimized"
+  },
+  "cot_multishot_reasoning_bootstrap": {
+    "final_score": 47.33,
+    "trace_url": null,
+    "program_path": "C:\\Users\\tcmk_\\Downloads\\dspy-automotive-extractor\\results\\optimized_cot_multishot_reasoning_bootstrap.json",
+    "optimizer_type": "bootstrap",
+    "timestamp": "2025-06-12T09:29:43.714139",
+    "strategy_type": "meta_optimized"
+  },
+  "naive_specificity_error_prevention_bootstrap": {
+    "final_score": 49.33,
+    "trace_url": null,
+    "program_path": "C:\\Users\\tcmk_\\Downloads\\dspy-automotive-extractor\\results\\optimized_naive_specificity_error_prevention_bootstrap.json",
+    "optimizer_type": "bootstrap",
+    "timestamp": "2025-06-12T10:34:44.382526",
+    "strategy_type": "meta_optimized"
+  },
+  "cot_context_anchoring_format_enforcement_bootstrap": {
+    "final_score": 44.0,
+    "trace_url": null,
+    "program_path": "C:\\Users\\tcmk_\\Downloads\\dspy-automotive-extractor\\results\\optimized_cot_context_anchoring_format_enforcement_bootstrap.json",
+    "optimizer_type": "bootstrap",
+    "timestamp": "2025-06-12T11:47:03.280159",
+    "strategy_type": "meta_optimized"
+  },
+  "plan_and_solve_constitutional_domain_expertise_bootstrap": {
+    "final_score": 44.67,
+    "trace_url": null,
+    "program_path": "C:\\Users\\tcmk_\\Downloads\\dspy-automotive-extractor\\results\\optimized_plan_and_solve_constitutional_domain_expertise_bootstrap.json",
+    "optimizer_type": "bootstrap",
+    "timestamp": "2025-06-12T13:08:04.321733",
+    "strategy_type": "meta_optimized"
+  },
+  "naive_context_anchoring_specificity_error_prevention_bootstrap": {
+    "final_score": 46.0,
+    "trace_url": null,
+    "program_path": "C:\\Users\\tcmk_\\Downloads\\dspy-automotive-extractor\\results\\optimized_naive_context_anchoring_specificity_error_prevention_bootstrap.json",
+    "optimizer_type": "bootstrap",
+    "timestamp": "2025-06-12T14:11:21.335320",
+    "strategy_type": "meta_optimized"
+  },
+  "contrastive_cot_constitutional_domain_expertise_format_enforcement_bootstrap": {
+    "final_score": 46.0,
+    "trace_url": null,
+    "program_path": "C:\\Users\\tcmk_\\Downloads\\dspy-automotive-extractor\\results\\optimized_contrastive_cot_constitutional_domain_expertise_format_enforcement_bootstrap.json",
+    "optimizer_type": "bootstrap",
+    "timestamp": "2025-06-12T15:25:39.432833",
+    "strategy_type": "meta_optimized"
+  },
+  "cot_context_anchoring_specificity_error_prevention_format_enforcement_bootstrap": {
+    "final_score": 48.0,
+    "trace_url": null,
+    "program_path": "C:\\Users\\tcmk_\\Downloads\\dspy-automotive-extractor\\results\\optimized_cot_context_anchoring_specificity_error_prevention_format_enforcement_bootstrap.json",
+    "optimizer_type": "bootstrap",
+    "timestamp": "2025-06-12T16:34:38.980329",
+    "strategy_type": "meta_optimized"
+  },
+  "contrastive_cot_specificity_bootstrap": {
+    "final_score": 46.67,
+    "trace_url": null,
+    "program_path": "C:\\Users\\tcmk_\\Downloads\\dspy-automotive-extractor\\results\\optimized_contrastive_cot_specificity_bootstrap.json",
+    "optimizer_type": "bootstrap",
+    "timestamp": "2025-06-12T17:49:45.576355",
+    "strategy_type": "meta_optimized"
+  },
+  "contrastive_cot_error_prevention_bootstrap": {
+    "final_score": 48.67,
+    "trace_url": null,
+    "program_path": "C:\\Users\\tcmk_\\Downloads\\dspy-automotive-extractor\\results\\optimized_contrastive_cot_error_prevention_bootstrap.json",
+    "optimizer_type": "bootstrap",
+    "timestamp": "2025-06-12T18:54:55.828065",
+    "strategy_type": "meta_optimized"
+  },
+  "contrastive_cot_context_anchoring_bootstrap": {
+    "final_score": 45.33,
+    "trace_url": null,
+    "program_path": "C:\\Users\\tcmk_\\Downloads\\dspy-automotive-extractor\\results\\optimized_contrastive_cot_context_anchoring_bootstrap.json",
+    "optimizer_type": "bootstrap",
+    "timestamp": "2025-06-12T19:58:24.589452",
+    "strategy_type": "meta_optimized"
+  },
+  "contrastive_cot_format_enforcement_bootstrap": {
+    "final_score": 27.33,
+    "trace_url": null,
+    "program_path": "C:\\Users\\tcmk_\\Downloads\\dspy-automotive-extractor\\results\\optimized_contrastive_cot_format_enforcement_bootstrap.json",
+    "optimizer_type": "bootstrap",
+    "timestamp": "2025-06-12T21:34:36.354873",
+    "strategy_type": "meta_optimized"
+  },
+  "contrastive_cot_multishot_reasoning_bootstrap": {
+    "final_score": 44.0,
+    "trace_url": null,
+    "program_path": "C:\\Users\\tcmk_\\Downloads\\dspy-automotive-extractor\\results\\optimized_contrastive_cot_multishot_reasoning_bootstrap.json",
+    "optimizer_type": "bootstrap",
+    "timestamp": "2025-06-12T22:44:47.648636",
+    "strategy_type": "meta_optimized"
+  },
+  "contrastive_cot_constitutional_bootstrap": {
+    "final_score": 46.0,
+    "trace_url": null,
+    "program_path": "C:\\Users\\tcmk_\\Downloads\\dspy-automotive-extractor\\results\\optimized_contrastive_cot_constitutional_bootstrap.json",
+    "optimizer_type": "bootstrap",
+    "timestamp": "2025-06-12T23:53:41.678359",
+    "strategy_type": "meta_optimized"
   }
 }
