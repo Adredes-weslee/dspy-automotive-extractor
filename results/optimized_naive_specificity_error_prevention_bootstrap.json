@@ -1,0 +1,145 @@
+{
+  "extractor": {
+    "traces": [],
+    "train": [],
+    "demos": [
+      {
+        "augmented": true,
+        "narrative": "Customer contacted Kia's Consumer Affairs (CA) Department on June [XXX], 2022 indicating that her husband was involved in an accident and the airbags in their 2022 Kia Telluride did not deploy.  Customer reported her husband was driving the subject Telluride at 65mph through a toll southbound on [XXX] when a second vehicle behind the Telluride went through the toll and attempted to squeeze in between the Telluride and a third vehicle on the highway. Customer's husband moved the Telluride to the right to evade the second vehicle and made contact with the right shoulder guardrail.  No other vehicles were involved in the incident.  The vehicle was towed.  When asked by CA, the customer reported that HDA and cruise control were engaged at the time of the incident but customer did not allege that either of those systems caused the accident.  \nThe subject Kia Telluride is equipped with the ADAS Level 2 feature Highway Driving Assist (HDA).  HDA is a supplemental system that helps maintain a set distance and speed from the vehicle ahead when driving on a highway and helps keep the vehicle between lanes while driving.  HDA may not be able to recognize all traffic situations and may not detect possible collisions due to limitations of the system.  Obstacles such as vehicles, motorcycles, bicycles, pedestrians, unspecified objects and structures that may collide with the vehicle may not be detected.  \nBased on the description of provided by the customer, the accident was not caused by a failure and\/or disengagement of HDA.  Kia has no further information at this time.\n***6\/[XXX]\/22 10-Day Update Incident Report***\nOn 6\/[XXX]\/22, Kia spoke with customer's husband regarding the incident. Customer's husband reiterated that his concern was that he believed the airbags should have deployed when he side-swiped the guardrails after he was \"cut-off\" by another vehicle.\n***7\/[XXX]\/22 Monthly Update Incident Report***\nSince Kia's updates on the 10-Day Update Incident Report, Kia has not received any material new, or materially different information related to this incident.",
+        "reasoning": "The narrative explicitly mentions a \"2022 Kia Telluride.\" Therefore, the make is Kia, the model is Telluride, and the year is 2022. The text is very clear about these details, leaving no room for uncertainty.",
+        "vehicle_info": {
+          "make": "KIA",
+          "model": "TELLURIDE",
+          "year": "2022"
+        }
+      },
+      {
+        "augmented": true,
+        "narrative": "On August [XXX], 2022 Toyota received a field report related to this crash. The vehicle was reportedly traveling east on [XXX], when it approached a vehicle travelling the wrong way on the road operated by a drunk driver. The Toyota Corolla driver alleged that they attempted to swerve right to miss the oncoming vehicle, but collided with the vehicle on the driver side. As a result of the collision, the Toyota Corolla allegedly rolled over, landed on its wheels, and contacted a highway barrier. \nToyota obtained Vehicle Control History (VCH) and Event Data Recorder (EDR) data from the subject vehicle. VCH provides an approximately 8 second pre-crash data recording, and EDR provides an approximately 4.80 second pre-crash data recording. Based on the data obtained, the following information was observed:  Lane Trace Assist (LTA) was engaged during the recording until approximately 6.7 seconds prior to the crash event and Dynamic Radar Cruise Control (DRCC) was engaged during the recording until approximately 5.5 seconds prior to the crash event. ADAS L2 was disengaged approximately 6.7 seconds prior to the crash due to driver steering input exceeding the steering torque override threshold of LTA. The vehicle was traveling at approximately 89 MPH prior to the crash event. \nAs a result of the crash incident, the subject vehicle was towed away from the scene. Injuries to occupants of the subject vehicle were described by the owner as: Driver: Cerebral fluid leaking from nose, Concussion, whiplash, backpain Front Passenger: No injuries reported.\nThis report is a Monthly Update. The original report ID is 1306-3711-1.",
+        "reasoning": "The narrative explicitly mentions \"Toyota Corolla\". The year is not directly stated, but the report is dated August 2022, implying the vehicle is a relatively recent model. I will assume the vehicle year is 2022.",
+        "vehicle_info": {
+          "make": "TOYOTA",
+          "model": "COROLLA",
+          "year": "2022"
+        }
+      },
+      {
+        "augmented": true,
+        "narrative": "A Hyundai Motor America (\"HMA\") associate was operating a model year 2024 Ioniq 6 employee lease vehicle with the vehicle's Adaptive Cruise Control (\"ACC\"), and Lane Following Assist (\"LFA\") features engaged simultaneously while driving at approximately 20-30MPH on [XXX]near Corona, CA.  The ACC allegedly engaged due to traffic slowing down and proceeded to slow the vehicle to a stop when the IONIQ 6 vehicle was struck in the rear by a Hyundai Elantra that had been rear-ended and pushed forward into the IONIQ 6 vehicle. NASO is in process of reaching out to the associate for additional information.",
+        "reasoning": "The narrative explicitly mentions a \"2024 Ioniq 6\" vehicle. This provides clear information for the make, model, and year. The make is Hyundai, the model is Ioniq 6, and the year is 2024.",
+        "vehicle_info": {
+          "make": "HYUNDAI",
+          "model": "IONIQ 6",
+          "year": "2024"
+        }
+      },
+      {
+        "augmented": true,
+        "narrative": "Alleged information here directly from customer report, not yet confirmed by Rivian: \"As I entered a curve in the road (curving right), the car jerked towards the right-hand k-rail and a red notice popped up that said that the highway assist feature was now off. I wasn't sure if the cruise control was still on so I returned my foot to the accelerator and tried to get back into the right lane (so as not to hit the k-rail). I think I probably over corrected a bit and veered slightly into the left-hand lane but then I felt the car try to fully jerk us into that left lane. At that point, I lost control of the car as the back started fishtailing.\" The driver also noted that \"I am a petite person, with minimal upper body strength, so I had a really hard time trying to control the heft of the vehicle as it was trying to veer into different lanes\". According to the customer report the driver was taken to the hospital and diagnosed with a strained left shoulder and the other 2 occupants, both adults, were not injured.\nUpdate: On January [XXX], 2024, at 10:33:20 a.m. PST, the subject vehicle was traveling south on [XXX] at 77 mph with Rivians Level 2 ADAS feature, Highway Assist (HWA), engaged. 25 seconds later, at 10:33:45 a.m. the vehicle notified the driver through a message on the driver display that their lane was merging ahead. 19 seconds later, at 10:34:04 a.m. PST, after no intervention from the driver, HWA disengaged because the subject vehicle moved out of its ODD as a result of insufficient highway markings.  At that same time, 10:34:04 a.m., the driver received audio and visual alerts to take over control of the subject vehicle through in-vehicle messaging. At this time the system did not detect hands on the wheel. Less than one second later, at 10:34:05 a.m., the driver put their hands back on the wheel and retook control but input a significant steering angle while still at a high rate of speed (75.4 mph) that started a loss of control. This steering input was not a result of the HWA feature, but an overcorrection by the driver. Over the next nine seconds, from 10:34:05 to 10:34:14 a.m., the driver steered the vehicle to both the left and right trying to regain control, they also applied both the brake and accelerator pedals at various times, sometimes simultaneously, until the vehicle departed the roadway and impacted the side barrier at 10:34:14 a.m. PST, causing damage to the right side of the subject vehicle and deploying the side airbags.",
+        "reasoning": "The narrative mentions \"subject vehicle\" multiple times, indicating a specific vehicle is being discussed. The text explicitly states the vehicle is a Rivian. The year is not directly mentioned, but the report was written in January 2024, suggesting a relatively recent model year. Given Rivian's relatively short production history, a reasonable assumption is a recent year. I will assume 2024. The model is not explicitly stated, but given the context of Highway Assist (HWA), it's likely a Rivian model that supports this feature. I will assume the model is \"R1T\" as it is a common Rivian model.",
+        "vehicle_info": {
+          "make": "RIVIAN",
+          "model": "R1T",
+          "year": "2024"
+        }
+      },
+      {
+        "narrative": "From original report (March 28, 2025):\nEntries in this report are based on unconfirmed allegations:\nOn March [XXX], 2025, Toyota received an initial contact from the owner and driver of a vehicle involved in the crash. She described that cruise control was engaged leading up to the crash event, and alleged that she was in, \"a single-vehicle accident due to an issue with the lane assist feature in her Toyota Camry veering the car hard to the right into a guardrail.\" She stated the resulted in the airbags deploying and total loss of the vehicle with  a tow-away from the scene. The driver .alleged injuries including whiplash, concussion, and bruising as a result of the accident. The driver also stated she, \"wants Toyota to be aware this is an issue, also thinks if it is lane assist Toyota should be partially responsible for getting into another vehicle of equal value and what she has already paid into the Camry on top of help with ER bills.\"\nFrom 10-Day Update Report (April 7, 2025):\nNo materially new information is available at this time.",
+        "make": "Toyota",
+        "model": "Camry",
+        "year": "2025"
+      },
+      {
+        "narrative": "On December [XXX], 2024, a 2023 GMS Sierra was travelling south on [XXX] in Houston, Texas with Super Cruise engaged and active.  According to OnStar audio recordings, a Camaro swerved in front of the Sierra, causing the Sierra to hit the Camaro.  Crash data indicates frontal airbags and front seatbelt pretensioners deployed.  The driver was wearing a seatbelt at the time of crash.  According to telematics data, at approximately 4 seconds prior to the crash, Super Cruise entered an Override state due to hand placement on the steering wheel and detection of steering wheel torque.  At approximately 1 second prior to crash, Super Cruise entered Disabled\/Not Ready state due to a brake pedal press.",
+        "make": "GMC",
+        "model": "Sierra",
+        "year": "2023"
+      },
+      {
+        "narrative": "At 6:38 AM on December [XXX], 2023 (PST), a 2023 Silverado 1500 Crew Cab was travelling northwest on [XXX], southwest of San Clemente, CA.  The vehicle was involved with a collision on the left side of the vehicle that caused side airbags and seat belt pretensioners to deploy.  ADAS telematic data indicates Super Cruise was last active 22 seconds prior to the crash.  A pre-crash speed of 75.7 mph was the last vehicle speed recorded, approximately 5 seconds prior to crash.",
+        "make": "Chevrolet",
+        "model": "Silverado 1500",
+        "year": "2023"
+      },
+      {
+        "narrative": "The information contained in this report is based solely on Nissan's understanding of the allegations received during Claimant's discussions with Nissan's Consumer Affairs representatives.  \nOn 7\/[XXX]\/2023, Claimant orally reported that she was crossing an intersection while using the ProPilot Assist (PPA) system, the system turned off, she had to apply \"hard brakes,\" but the subject vehicle crashed into another vehicle.  Claimant reported the subject vehicle was towed to a Nissan dealer.\nDuring a follow-up call on 7\/[XXX]\/2023, Claimant reported that the PPA disengaged automatically after the \"alarm system went off for the brakes\".  The subject vehicle reportedly hit the rear of another vehicle.\nDuring a follow-up call on 7\/11\/2023, Claimant reported that she is alleging a defect with the engine caused the accident not the PPA.  She reportedly has concerns with the PPA, but not related to this specific accident nor any accident in general.  She reported that the PPA was not in use at the time of this accident.  Nissan requested a vehicle inspection.",
+        "make": "Nissan",
+        "model": "Rogue",
+        "year": "2022"
+      },
+      {
+        "narrative": "The driver reported to Ford that while traveling north on [XXX], a Chevrolet midsize sedan spun into the F150 lane and impacting the left-hand side of F150 vehicle.  The impact caused the F150 to spin and have multiple impacts into a guardrail.  No injuries were reported, the vehicle deployed airbags and was towed.\nThe driver claims the Level 2 ACC (Adaptive Cruise Control) and LCA (Lane Center Assist), hands ON were active when the incident occurred.",
+        "make": "Ford",
+        "model": "F-150",
+        "year": "2021"
+      },
+      {
+        "narrative": "One June [XXX], 2022 Toyota received an allegation related to this crash from the owner of the vehicle through a call to the Toyota Brand Engagement Center. At the time of initial contact and description of the incident, no allegations related to the operation of Lane Trace Assist, lane centering, or ADAS L2 functions were communicated. On July [XXX], 2022 a field report regarding this crash incident was completed. On August [XXX], as part of a review of a field report created for the incident, Toyota became aware of vehicle data indicating that the vehicle was operating with ADAS L2 engagement in the moments leading up to the crash event.\nToyota obtained Vehicle Control History (VCH) and Event Data Recorder (EDR) data from the subject vehicle. VCH provides an approximately 6.75 second pre-crash data recording, and EDR provides an approximately 4.85 second pre-crash data recording. Based on the data obtained, the following information was observed: Dynamic Radar Cruise Control (DRCC) and Lane Trace Assist (LTA) were engaged during the recording until approximately 1.75 seconds prior to the crash event, at which point the Pre-Collision System Alarm activated, disengaging the DRCC and LTA. The vehicle was traveling at approximately 77 MPH prior to the crash event. The owner of the subject vehicle alleged that the passenger vehicle it impacted was \"a slow moving vehicle.\"\nAs a result of the crash incident, multiple airbags deployed in the subject vehicle and it was towed away from the scene. Injuries to occupants of the subject vehicle were described by the owner as: Driver: bruising, Front Passenger: burst fracture in spine, Rear Passenger 1: Bruising, Rear Passenger 2: Bruising.\nThis report is a 10 Day update. The original report ID is 1306-3573-1.",
+        "make": "Toyota",
+        "model": "Sienna HV",
+        "year": "2021"
+      },
+      {
+        "narrative": "The customer reported that while driving, another vehicle crashed into the customer's on the driver's side door, totaling the vehicle. The customer alleges that the Lane Keep Assist System and Adaptive Cruise Control were engaged.",
+        "make": "Honda",
+        "model": "Accord Hybrid",
+        "year": "2021"
+      },
+      {
+        "narrative": "On July 29, 2024 Nissan learned of a news article reporting on July 25th of an accident involving an Ariya.  The incident reportedly took place at the intersection of [XXX] and [XXX] in Shelbyville, TN, both of which are not limited access highways. On July 31, 2024 Nissan determined that ProPilot Assist 1.0 was active (\"hands-on\" mode) within 30 seconds of the incident. Telematics data was last transmitted approximately 1,500 ft before the intersection. No crash notification was transmitted at the time of the incident.\nBased on information in the news report, on Monday July [XXX], 2024, the driver of the Ariya was traveling north on [XXX] approaching an intersection with [XXX]. A tractor-trailer that was reportedly traveling west from [XXX] pulled out in front of the Nissan Ariya. According to the report the Ariya traveled underneath the trailer and continued approximately 100 yards before coming to a stop. The driver and passenger of the Ariya reportedly sustained fatal injuries. The tractor-trailer driver was reported not injured.\nAccording to the police report, at approximately 6:15 p.m. on July [XXX], 2024, the Nissan Ariya was traveling north on [XXX] in the number two lane when a tractor trailer traveling west bound on [XXX] attempted to make a left-hand turn onto [XXX]South, traveling across the northbound lane. The police report states that the Nissan Ariya collided with the left rear side of the trailer and continued traveling north into the median.  According to the police report: the Ariya driver and passenger sustained fatal injuries and had to be extricated from the vehicle multiple airbags were deployed the passenger's seat belt use was \"improper\" the Ariya driver was belted and the tractor trailer driver was operating with a disqualified license.\nNissan obtained vehicle EDR from law enforcement. That data indicated that the speed at impact was 53.4 mph, with no pre-impact brake application. \nNissan conducted a preliminary, non-destructive inspection on August 6, 2024. The vehicle had been stored in the open air and uncovered until August 3, 2024.  Various components were stored by the junkyard in an unidentified location and made available for inspection.  The vehicles condition is consistent with underride of the tractor trailer and extrication. \nThe driver seatbelt was found buckled with the lap portion routed behind the seat, the pretensioner having activated and shoulder-belt webbing cut near the d-ring location. The passenger seatbelt was buckled, with both lap and shoulder belt pulled tight against the seat back, with the pretensioner having activated. \nNissan was able to collect the vehicles ADAS control unit and Lane Camera assembly. Nissan is currently assessing whether it is possible to extract data, to the extent it exists, from these items.  \nNissan conducted an inspection of the trailer on October 9th. No findings during the inspection changed our understanding of the incident.\nNissan is continuing to analyze information regarding this incident.",
+        "make": "Nissan",
+        "model": "Ariya",
+        "year": "2023"
+      },
+      {
+        "narrative": "The information contained in this report is based solely on Nissan's notification via telematics that a vehicle equipped with Pro Pilot Assist 2.0 was involved in an incident involving an air bag deployment.The system was active in \"hands-on\" mode within 30 seconds of the incident.Nissan is currently examining its ability to provide additional details that may be protected by consumer privacy laws.Nissan is gathering additional information and will supplement with the monthly report.Nissan has not been contacted regarding this incident.",
+        "make": "Nissan",
+        "model": "Ariya",
+        "year": "2023"
+      },
+      {
+        "narrative": "Owner description was updated: Accident occurred when the adaptive cruise controls were turned on. The customer states that he was driving along on an open wet road in rural Tennessee with his hand slightly on the steering wheel as the vehicle was keeping itself in the lane on its own. However, at some point a phone call came in and he tapped the ignore button on the steering wheel and at that time, the vehicle began to veer off of the road as he grabbed the steering wheel. The vehicle went down an embankment and into a fence as he tried to hit the brakes to slow the vehicle down. Lane Keeping Assist was turned on as well. No errors popped up on the dashboard.   The customer also alleges they sustained a leg\/ankle injury. The injury severity is currently unknown.",
+        "make": "Mercedes-Benz",
+        "model": "S580 4Matic",
+        "year": "2022"
+      },
+      {
+        "narrative": "The customer was proceeding through an intersection when another vehicle from the opposite side pulled in front and crashed into the customer. The customer alleges that the Lane Keep Assist System and Adaptive Cruise Control were engaged.",
+        "make": "Honda",
+        "model": "HRV",
+        "year": "2021"
+      },
+      {
+        "narrative": "Subject vehicle was southbound on [XXX] when it struck a truck coming out from a construction area. Customer states the vehicle's adaptive cruise control and lane keeping assist system were engaged at the time of the incident.  The subject vehicle was towed from scene.\n2\/[XXX]\/22 Update - Changed the 'AUTOMATION SYSTEM ENGAGED AT THE TIME OF THE INCIDENT' field from 'ADAS' to 'Unknown, See Narrative'.",
+        "make": "Honda",
+        "model": "Ridgeline",
+        "year": "2018"
+      }
+    ],
+    "signature": {
+      "instructions": "Extract the vehicle make, model, and year from the automotive complaint text.\n\nExamples:\n- \"2023 Tesla Model Y\" → Make: Tesla, Model: Model Y, Year: 2023\n- \"KIA NIRO 2023MY\" → Make: KIA, Model: NIRO, Year: 2023\n- \"Ford F-150 from 2021\" → Make: Ford, Model: F-150, Year: 2021\n\nFirst, provide your reasoning explaining what text clues you found for each field and any uncertainties you encountered. Then extract the structured data.\n\nUse \"UNKNOWN\" if any information is not clearly mentioned.\n\nSPECIFIC EXTRACTION REQUIREMENTS:\n- Extract EXACTLY 3 fields: make, model, year\n- Make: Vehicle manufacturer in ALL CAPS (e.g., 'TESLA', 'FORD', 'HONDA')\n- Model: Vehicle model in ALL CAPS (e.g., 'MODEL Y', 'F-150', 'CIVIC')\n- Year: 4-digit integer only (e.g., 2022, 2019, 2021)\n- Output must be valid JSON format\n- Do not include explanatory text outside the JSON structure\n- Field names must be exactly: \"make\", \"model\", \"year\"\n\n\nCRITICAL ERROR PREVENTION RULES:\n- Do NOT confuse trim levels (LX, EX, Sport, Limited) with model names\n- Do NOT extract partial years (e.g., '22' instead of 2022)\n- Do NOT include sub-models or variants as separate models\n- Do NOT extract generic terms like 'car', 'truck', 'vehicle' as make\/model\n- Do NOT confuse Honda with Acura (they are separate makes)\n- Do NOT extract speed, mileage, or other numbers as years\n- Do NOT include quotation marks in the final field values\n- If information is unclear or missing, use 'UNKNOWN' for that field\n- Do NOT guess or infer information not explicitly stated",
+      "fields": [
+        {
+          "prefix": "Narrative:",
+          "description": "A detailed, unstructured description of a vehicle complaint."
+        },
+        {
+          "prefix": "Reasoning:",
+          "description": "Step-by-step reasoning process showing how you identified the vehicle information. Explain your thought process, what clues you found, and any uncertainties."
+        },
+        {
+          "prefix": "Vehicle Info:",
+          "description": "The structured vehicle information."
+        }
+      ]
+    },
+    "lm": null
+  },
+  "metadata": {
+    "dependency_versions": {
+      "python": "3.12",
+      "dspy": "2.6.27",
+      "cloudpickle": "3.1"
+    }
+  }
+}
