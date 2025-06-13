@@ -283,15 +283,19 @@ def display_enhanced_results_tab() -> None:
         show_mipro = st.checkbox("Show MIPRO Strategies", value=True)
         min_score = st.slider("Minimum F1 Score (%)", 0.0, 100.0, 0.0, 5.0)
 
-    # Process data dynamically with CORRECTED LOGIC
+    # Process data dynamically with ENHANCED LOGIC FOR REASONING DETECTION
     df_data = []
     for strategy, data in summary_data.items():
         score = data.get("final_score", 0)
         if score < min_score:
             continue
 
-        # CORRECTED strategy type detection
+        # ENHANCED strategy type detection including reasoning variants
         strategy_type_from_data = data.get("strategy_type", "")
+
+        # Check for reasoning variants first
+        has_reasoning = "with_reasoning" in strategy
+        no_reasoning = "without_reasoning" in strategy
 
         # Method 1: Check explicit strategy_type field (most reliable)
         if strategy_type_from_data == "meta_optimized":
@@ -311,9 +315,14 @@ def display_enhanced_results_tab() -> None:
             is_baseline = False
             is_meta = True
             is_mipro = False
-        # Method 4: Default to baseline (Phase 1 strategies)
+        # Method 4: Baseline strategies with reasoning distinction
         else:
-            strategy_type = "Baseline"
+            if has_reasoning:
+                strategy_type = "Baseline (+ Reasoning)"
+            elif no_reasoning:
+                strategy_type = "Baseline (- Reasoning)"
+            else:
+                strategy_type = "Baseline"
             is_baseline = True
             is_meta = False
             is_mipro = False
@@ -339,19 +348,34 @@ def display_enhanced_results_tab() -> None:
     if df_data:
         df = pd.DataFrame(df_data)
 
-        # Add Plotly chart with MIPRO color
         fig = px.bar(
             df.sort_values("F1 Score", ascending=True),
             x="F1 Score",
             y="Strategy",
             color="Type",
             title="F1 Scores by Strategy",
+            height=max(500, len(df) * 25),  # Dynamic height
             color_discrete_map={
+                "Baseline (- Reasoning)": "#87CEEB",
+                "Baseline (+ Reasoning)": "#1f77b4",
                 "Baseline": "#1f77b4",
                 "Meta-Optimized": "#ff7f0e",
                 "MIPRO": "#2ca02c",
             },
         )
+
+        # Force show all y-axis labels
+        fig.update_layout(
+            yaxis=dict(
+                tickmode="array",
+                tickvals=list(range(len(df))),
+                ticktext=df.sort_values("F1 Score", ascending=True)[
+                    "Strategy"
+                ].tolist(),
+            ),
+            margin=dict(l=150),  # Add left margin for longer strategy names
+        )
+
         st.plotly_chart(fig, use_container_width=True)
 
         # Enhanced dataframe display
@@ -360,6 +384,89 @@ def display_enhanced_results_tab() -> None:
             use_container_width=True,
             hide_index=True,
         )
+
+        # Reasoning Impact Analysis Section (NEW)
+        baseline_with = df[df["Type"] == "Baseline (+ Reasoning)"]
+        baseline_without = df[df["Type"] == "Baseline (- Reasoning)"]
+
+        if len(baseline_with) > 0 and len(baseline_without) > 0:
+            st.header("🧠 Reasoning Field Impact Analysis")
+
+            # Calculate reasoning impact
+            reasoning_comparison = []
+
+            # Match strategies by base name
+            for with_row in baseline_with.itertuples():
+                strategy_base = with_row._5.replace(
+                    "_with_reasoning", ""
+                )  # Raw Strategy
+
+                # Find corresponding without reasoning
+                without_match = baseline_without[
+                    baseline_without["Raw Strategy"].str.contains(
+                        strategy_base.replace("_with_reasoning", "")
+                    )
+                ]
+
+                if len(without_match) > 0:
+                    without_score = without_match.iloc[0]["F1 Score"]
+                    with_score = with_row._2  # F1 Score
+                    improvement = with_score - without_score
+
+                    reasoning_comparison.append(
+                        {
+                            "Strategy": strategy_base.replace("_", " ").title(),
+                            "Without Reasoning": f"{without_score:.2f}%",
+                            "With Reasoning": f"{with_score:.2f}%",
+                            "Improvement": f"+{improvement:.2f}%",
+                            "Improvement_Value": improvement,
+                        }
+                    )
+
+            if reasoning_comparison:
+                df_reasoning = pd.DataFrame(reasoning_comparison)
+
+                # Reasoning impact chart
+                fig_reasoning = px.bar(
+                    df_reasoning.sort_values("Improvement_Value", ascending=True),
+                    x="Improvement_Value",
+                    y="Strategy",
+                    title="Reasoning Field Impact by Strategy (+/- Improvement)",
+                    color_discrete_sequence=["#2E8B57"],  # Sea green
+                    text="Improvement",
+                )
+                fig_reasoning.update_traces(textposition="outside")
+                fig_reasoning.update_layout(xaxis_title="F1 Score Improvement (%)")
+                st.plotly_chart(fig_reasoning, use_container_width=True)
+
+                # Summary table
+                st.dataframe(
+                    df_reasoning[
+                        [
+                            "Strategy",
+                            "Without Reasoning",
+                            "With Reasoning",
+                            "Improvement",
+                        ]
+                    ],
+                    use_container_width=True,
+                    hide_index=True,
+                )
+
+                # Reasoning impact metrics
+                avg_improvement = df_reasoning["Improvement_Value"].mean()
+                best_improvement = df_reasoning["Improvement_Value"].max()
+                best_strategy = df_reasoning.loc[
+                    df_reasoning["Improvement_Value"].idxmax(), "Strategy"
+                ]
+
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Average Reasoning Gain", f"+{avg_improvement:.2f}%")
+                with col2:
+                    st.metric("Best Reasoning Gain", f"+{best_improvement:.2f}%")
+                with col3:
+                    st.success(f"🏆 **Top Gainer**: {best_strategy}")
 
         # Meta-Optimization Analysis Section (CORRECTED)
         meta_df = df[
@@ -467,7 +574,7 @@ def display_enhanced_results_tab() -> None:
 
         st.dataframe(type_summary, use_container_width=True)
 
-        # Box plot for distribution comparison
+        # Box plot for distribution comparison with enhanced colors
         fig_box = px.box(
             df,
             x="Type",
@@ -475,9 +582,11 @@ def display_enhanced_results_tab() -> None:
             title="F1 Score Distribution by Strategy Type",
             color="Type",
             color_discrete_map={
-                "Baseline": "#1f77b4",
-                "Meta-Optimized": "#ff7f0e",
-                "MIPRO": "#2ca02c",
+                "Baseline (- Reasoning)": "#87CEEB",  # Light blue
+                "Baseline (+ Reasoning)": "#1f77b4",  # Dark blue
+                "Baseline": "#1f77b4",  # Fallback blue
+                "Meta-Optimized": "#ff7f0e",  # Orange
+                "MIPRO": "#2ca02c",  # Green
             },
         )
         st.plotly_chart(fig_box, use_container_width=True)
