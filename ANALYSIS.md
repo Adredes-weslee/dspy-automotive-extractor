@@ -219,6 +219,12 @@ reasoning_field_required = True
 3. **Avoid meta-optimization** unless baseline lacks reasoning fields
 4. **Test framework compatibility** before adding prompt enhancements
 
+### Dashboard Best Practices
+1. **Use `app_cloud.py` for deployment**: Cloud-compatible with demo data fallback
+2. **Interactive filtering**: Strategy type and performance threshold controls
+3. **Visual analysis**: Color-coded charts for immediate pattern recognition
+4. **Export capabilities**: Full experimental results in structured format
+
 ### Advanced Optimizations
 1. **Focus on reasoning quality** rather than prompt complexity
 2. **Domain-specific reasoning examples** over generic meta-optimizations
@@ -230,6 +236,41 @@ reasoning_field_required = True
 2. **Framework-native enhancements**: Work within DSPy constraints
 3. **Performance ceiling investigation**: Why 51.33% represents the limit
 4. **Task-specific reasoning patterns**: Automotive domain reasoning templates
+
+### Research Directions
+1. **Reasoning field optimization**: Improve quality of reasoning examples
+2. **Framework-native enhancements**: Work within DSPy constraints
+3. **Performance ceiling investigation**: Why 51.33% represents the limit
+4. **Task-specific reasoning patterns**: Automotive domain reasoning templates
+
+## 🌐 Dashboard Implementation
+
+### Cloud-Compatible Analytics
+- **Streamlit Cloud Version**: Full analytical capabilities with demo data fallback
+- **Interactive Visualizations**: Plotly-based charts with dynamic filtering
+- **Real-time Analysis**: Reasoning field impact calculations and meta-optimization breakdowns
+- **Strategy Type Detection**: Enhanced logic for baseline/meta-optimized/MIPRO categorization
+
+### Dashboard Features
+- **Color-coded Performance Charts**: Strategy type visualization with consistent color scheme
+- **Reasoning Impact Analysis**: Side-by-side comparison with improvement deltas
+- **Meta-Optimizer Performance**: Breakdown by technique with statistical summaries
+- **Cloud Demo Compatibility**: Embedded demo data for Streamlit Community Cloud
+
+### Cloud Demo Compatibility**: Embedded demo data for Streamlit Community Cloud
+
+## 💻 Implementation Architecture
+
+### File Structure Optimization
+- **`app_cloud.py`**: Cloud-ready dashboard with embedded demo data
+- **`app.py`**: Local version with live extraction capabilities  
+- **`app_enhanced.py`**: Advanced local version with meta-optimizer analysis
+- **Strategy detection**: Enhanced logic for reasoning variants and meta-optimization types
+
+### Cloud Deployment Ready
+- **Demo data embedded**: Complete experimental results for demonstration
+- **No local dependencies**: Works without Ollama or local LLM inference
+- **Full analytical power**: All visualizations and insights available in cloud
 
 ## 📈 Final Performance Summary
 
