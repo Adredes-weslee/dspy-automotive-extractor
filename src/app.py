@@ -266,7 +266,107 @@ def display_results_tab() -> None:
 
 
 def display_enhanced_results_tab() -> None:
-    """Enhanced results tab with dynamic data and visualizations."""
+    """Display enhanced results analysis tab with comprehensive visualizations and filtering.
+
+    This function creates an advanced dashboard for analyzing DSPy optimization experiment results
+    across multiple strategy types (baseline, meta-optimized, and MIPRO). It provides interactive
+    filtering, dynamic visualizations, and detailed performance comparisons including reasoning
+    field impact analysis and meta-optimization effectiveness evaluation.
+
+    The function automatically categorizes strategies into distinct types based on naming conventions
+    and explicit metadata, then provides comprehensive analysis sections for each category with
+    interactive Plotly visualizations and statistical summaries.
+
+    Strategy Type Detection Logic:
+        - **Meta-Optimized**: Strategies with `strategy_type: "meta_optimized"` or ending in `_bootstrap`
+        - **MIPRO**: Strategies containing "mipro" in the name (case-insensitive)
+        - **Baseline (+ Reasoning)**: Baseline strategies containing "with_reasoning"
+        - **Baseline (- Reasoning)**: Baseline strategies containing "without_reasoning"
+        - **Baseline**: All other strategies not matching above categories
+
+    Visualization Features:
+        - Dynamic height bar charts with color-coded strategy types
+        - Interactive sidebar filtering (baseline/meta-optimized/MIPRO/minimum score)
+        - Reasoning field impact analysis with delta calculations
+        - Meta-optimization performance breakdown by technique
+        - Box plots for distribution analysis across strategy types
+        - Performance metrics and statistical summaries
+
+    Analysis Sections Generated:
+        1. **Main Results Visualization**: Horizontal bar chart of all strategies with filtering
+        2. **Reasoning Field Impact**: Side-by-side comparison of with/without reasoning variants
+        3. **Meta-Optimization Analysis**: Performance breakdown by meta-optimization technique
+        4. **MIPRO Analysis**: Dedicated analysis for MIPRO strategies (if present)
+        5. **Performance Comparison**: Statistical summary tables by strategy type
+        6. **Key Insights**: Overall champion, worst performer, and performance gaps
+
+    Color Scheme:
+        - Light Blue (#87CEEB): Baseline (- Reasoning)
+        - Dark Blue (#1f77b4): Baseline (+ Reasoning) and fallback Baseline
+        - Orange (#ff7f0e): Meta-Optimized strategies
+        - Green (#2ca02c): MIPRO strategies
+        - Sea Green (#2E8B57): Reasoning improvement deltas
+
+    Interactive Controls:
+        - Sidebar checkboxes for strategy type filtering
+        - F1 score threshold slider (0-100%)
+        - Expandable sections for detailed analysis
+        - Responsive layout with dynamic chart sizing
+
+    Data Requirements:
+        The function expects `results_summary.json` to contain strategy entries with the following structure:
+        ```json
+        {
+            "strategy_name": {
+                "final_score": float,  // F1 score percentage (0-100)
+                "timestamp": str,      // ISO format timestamp
+                "strategy_type": str,  // Optional: "meta_optimized" for Phase 2 strategies
+                "program_path": str    // Optional: Path to optimized program file
+            }
+        }
+        ```
+
+    Args:
+        None: Function uses global data sources and Streamlit session state.
+
+    Returns:
+        None: Function renders UI components directly to Streamlit interface.
+
+    Side Effects:
+        - Renders multiple Streamlit UI components (headers, charts, dataframes, metrics)
+        - Loads and processes experiment results from `results_summary.json`
+        - Creates interactive Plotly visualizations with dynamic sizing
+        - Displays warning messages if no data is available or filters exclude all results
+        - Calculates and displays statistical summaries and performance insights
+
+    Raises:
+        FileNotFoundError: Implicitly handled - displays warning if results_summary.json not found
+        KeyError: Handled gracefully - uses .get() methods with defaults for missing data fields
+        ValueError: Handled gracefully - skips malformed data entries during processing
+
+    Example:
+        >>> # Called from main dashboard interface
+        >>> display_enhanced_results_tab()
+        # Renders complete analysis dashboard with:
+        # - Interactive filtering controls in sidebar
+        # - Color-coded strategy performance chart
+        # - Reasoning field impact analysis (+8.66% for Contrastive CoT)
+        # - Meta-optimization performance breakdown
+        # - Statistical summaries and key insights
+
+    Note:
+        This function is designed for Streamlit's execution model and assumes that:
+        - `load_summary_data()` function is available and returns experiment results dictionary
+        - Required visualization libraries (plotly.express, pandas) are imported
+        - Results data follows the expected JSON schema with numeric F1 scores
+        - Streamlit sidebar and main content areas are available for rendering
+
+        The function gracefully handles missing data, empty results, and various data quality issues
+        by providing appropriate fallbacks and user-friendly error messages.
+
+        Performance scales well with large numbers of strategies due to dynamic chart sizing
+        and efficient pandas operations for data processing and aggregation.
+    """
     st.header("📈 Experiment Results")
 
     summary_data = load_summary_data()
