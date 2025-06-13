@@ -40,6 +40,7 @@ from typing import Any, Dict, Optional, Tuple
 
 import dspy
 import pandas as pd
+import plotly.express as px
 import streamlit as st
 
 # Import necessary modules for the live demo
@@ -264,73 +265,443 @@ def display_results_tab() -> None:
             st.metric(f"{medal} {strategy_clean}", f"{score}%")
 
 
+def display_enhanced_results_tab() -> None:
+    """Enhanced results tab with dynamic data and visualizations."""
+    st.header("📈 Experiment Results")
+
+    summary_data = load_summary_data()
+
+    if not summary_data:
+        st.warning("⚠️ `results_summary.json` not found. Please run optimization first.")
+        return
+
+    # Sidebar filters
+    with st.sidebar:
+        st.header("🎛️ Results Filters")
+        show_baseline = st.checkbox("Show Baseline Strategies", value=True)
+        show_meta = st.checkbox("Show Meta-Optimized Strategies", value=True)
+        show_mipro = st.checkbox("Show MIPRO Strategies", value=True)
+        min_score = st.slider("Minimum F1 Score (%)", 0.0, 100.0, 0.0, 5.0)
+
+    # Process data dynamically with CORRECTED LOGIC
+    df_data = []
+    for strategy, data in summary_data.items():
+        score = data.get("final_score", 0)
+        if score < min_score:
+            continue
+
+        # CORRECTED strategy type detection
+        strategy_type_from_data = data.get("strategy_type", "")
+
+        # Method 1: Check explicit strategy_type field (most reliable)
+        if strategy_type_from_data == "meta_optimized":
+            strategy_type = "Meta-Optimized"
+            is_baseline = False
+            is_meta = True
+            is_mipro = False
+        # Method 2: Check for MIPRO in strategy name
+        elif "mipro" in strategy.lower():
+            strategy_type = "MIPRO"
+            is_baseline = False
+            is_meta = False
+            is_mipro = True
+        # Method 3: Check if it ends with bootstrap (backup for meta-optimized)
+        elif strategy.endswith("_bootstrap"):
+            strategy_type = "Meta-Optimized"
+            is_baseline = False
+            is_meta = True
+            is_mipro = False
+        # Method 4: Default to baseline (Phase 1 strategies)
+        else:
+            strategy_type = "Baseline"
+            is_baseline = True
+            is_meta = False
+            is_mipro = False
+
+        # Apply filters
+        if is_baseline and not show_baseline:
+            continue
+        if is_meta and not show_meta:
+            continue
+        if is_mipro and not show_mipro:
+            continue
+
+        df_data.append(
+            {
+                "Strategy": strategy.replace("_", " ").title(),
+                "F1 Score": score,
+                "Type": strategy_type,
+                "Timestamp": data.get("timestamp", "N/A"),
+                "Raw Strategy": strategy,
+            }
+        )
+
+    if df_data:
+        df = pd.DataFrame(df_data)
+
+        # Add Plotly chart with MIPRO color
+        fig = px.bar(
+            df.sort_values("F1 Score", ascending=True),
+            x="F1 Score",
+            y="Strategy",
+            color="Type",
+            title="F1 Scores by Strategy",
+            color_discrete_map={
+                "Baseline": "#1f77b4",
+                "Meta-Optimized": "#ff7f0e",
+                "MIPRO": "#2ca02c",
+            },
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Enhanced dataframe display
+        st.dataframe(
+            df[["Strategy", "F1 Score", "Type", "Timestamp"]],
+            use_container_width=True,
+            hide_index=True,
+        )
+
+        # Meta-Optimization Analysis Section (CORRECTED)
+        meta_df = df[
+            df["Type"] == "Meta-Optimized"
+        ]  # Use exact match instead of contains
+        if len(meta_df) > 0:
+            st.header("🔬 Meta-Optimization Analysis")
+
+            # Group by meta-optimizer type
+            meta_analysis = []
+            for strategy_row in meta_df.itertuples():
+                strategy_name = strategy_row._5  # Raw Strategy column (index 5)
+                for opt_name in [
+                    "domain_expertise",
+                    "specificity",
+                    "error_prevention",
+                    "context_anchoring",
+                    "format_enforcement",
+                    "constitutional",
+                ]:
+                    if opt_name in strategy_name:
+                        meta_analysis.append(
+                            {
+                                "Meta Optimizer": opt_name.replace("_", " ").title(),
+                                "Strategy": strategy_row.Strategy,  # index 1
+                                "F1 Score": strategy_row._2,  # F1 Score column (index 2)
+                            }
+                        )
+                        break  # Only match the first optimizer found
+
+            if meta_analysis:
+                df_meta = pd.DataFrame(meta_analysis)
+
+                # Create a grouped bar chart for meta-optimizers
+                fig_meta = px.bar(
+                    df_meta.sort_values("F1 Score", ascending=True),
+                    x="F1 Score",
+                    y="Strategy",
+                    color="Meta Optimizer",
+                    title="Meta-Optimization Performance by Technique",
+                    height=400,
+                )
+                st.plotly_chart(fig_meta, use_container_width=True)
+
+                # Summary table
+                st.subheader("📊 Meta-Optimizer Performance Summary")
+                meta_summary = (
+                    df_meta.groupby("Meta Optimizer")
+                    .agg({"F1 Score": ["count", "mean", "max", "min"]})
+                    .round(2)
+                )
+                meta_summary.columns = ["Count", "Average", "Best", "Worst"]
+                st.dataframe(meta_summary, use_container_width=True)
+
+                # Insights based on meta-optimization results
+                best_meta = df_meta.loc[df_meta["F1 Score"].idxmax()]
+                worst_meta = df_meta.loc[df_meta["F1 Score"].idxmin()]
+
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.success(
+                        f"🏆 **Best Meta-Optimizer**: {best_meta['Meta Optimizer']} ({best_meta['F1 Score']:.2f}%)"
+                    )
+                with col2:
+                    st.error(
+                        f"💥 **Worst Meta-Optimizer**: {worst_meta['Meta Optimizer']} ({worst_meta['F1 Score']:.2f}%)"
+                    )
+
+        # MIPRO Analysis Section
+        if len(df[df["Type"] == "MIPRO"]) > 0:
+            st.header("🎯 MIPRO Analysis")
+
+            mipro_df = df[df["Type"] == "MIPRO"]
+
+            # MIPRO performance chart
+            fig_mipro = px.bar(
+                mipro_df.sort_values("F1 Score", ascending=True),
+                x="F1 Score",
+                y="Strategy",
+                title="MIPRO Strategy Performance",
+                color_discrete_sequence=["#2ca02c"],
+                height=300,
+            )
+            st.plotly_chart(fig_mipro, use_container_width=True)
+
+            # MIPRO summary stats
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("MIPRO Strategies", len(mipro_df))
+            with col2:
+                st.metric("Best MIPRO Score", f"{mipro_df['F1 Score'].max():.2f}%")
+            with col3:
+                st.metric("Average MIPRO Score", f"{mipro_df['F1 Score'].mean():.2f}%")
+
+        # Performance Comparison Section
+        st.header("📊 Performance Comparison by Strategy Type")
+
+        # Calculate summary statistics by type
+        type_summary = (
+            df.groupby("Type")
+            .agg({"F1 Score": ["count", "mean", "max", "min", "std"]})
+            .round(2)
+        )
+        type_summary.columns = ["Count", "Average", "Best", "Worst", "Std Dev"]
+
+        st.dataframe(type_summary, use_container_width=True)
+
+        # Box plot for distribution comparison
+        fig_box = px.box(
+            df,
+            x="Type",
+            y="F1 Score",
+            title="F1 Score Distribution by Strategy Type",
+            color="Type",
+            color_discrete_map={
+                "Baseline": "#1f77b4",
+                "Meta-Optimized": "#ff7f0e",
+                "MIPRO": "#2ca02c",
+            },
+        )
+        st.plotly_chart(fig_box, use_container_width=True)
+
+        # Key Insights Section
+        st.header("💡 Key Performance Insights")
+
+        # Calculate insights
+        best_overall = df.loc[df["F1 Score"].idxmax()]
+        worst_overall = df.loc[df["F1 Score"].idxmin()]
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.success(
+                f"🏆 **Overall Champion**\n{best_overall['Strategy']} ({best_overall['F1 Score']:.2f}%)"
+            )
+
+        with col2:
+            st.error(
+                f"💥 **Lowest Performer**\n{worst_overall['Strategy']} ({worst_overall['F1 Score']:.2f}%)"
+            )
+
+        with col3:
+            performance_range = df["F1 Score"].max() - df["F1 Score"].min()
+            st.warning(f"📊 **Performance Range**\n{performance_range:.2f}% spread")
+
+        # Strategy type comparison if multiple types exist
+        if len(df["Type"].unique()) > 1:
+            st.subheader("📈 Strategy Type Comparison")
+            type_performance = (
+                df.groupby("Type")["F1 Score"].mean().sort_values(ascending=False)
+            )
+
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                best_type = type_performance.index[0]
+                st.info(
+                    f"🥇 **Best Type**: {best_type}\n({type_performance.iloc[0]:.2f}% avg)"
+                )
+
+            if len(type_performance) > 1:
+                with col2:
+                    worst_type = type_performance.index[-1]
+                    st.warning(
+                        f"🥉 **Worst Type**: {worst_type}\n({type_performance.iloc[-1]:.2f}% avg)"
+                    )
+
+                with col3:
+                    type_gap = type_performance.iloc[0] - type_performance.iloc[-1]
+                    st.metric("Type Performance Gap", f"{type_gap:.2f}%")
+
+    else:
+        st.info(
+            "No results match the current filter criteria. Adjust the filters to see data."
+        )
+
+
 def display_analysis_tab() -> None:
-    """Display analysis and insights tab with theoretical foundations and findings.
+    """Display analysis and insights tab with comprehensive two-phase experimental findings.
 
     This function provides comprehensive analysis including:
-    - Key experimental findings and performance patterns
-    - Theoretical explanations for observed results
-    - Current experiment status tracking
-    - Dynamic insights based on available results
+    - Phase 1: Reasoning field experimental findings and performance patterns
+    - Phase 2: Meta-optimization results and failure analysis
+    - Theoretical explanations for observed results including prompt engineering conflicts
+    - Current experiment status tracking for both phases
+    - Dynamic insights based on available results from both experimental phases
 
     Side Effects:
         - Renders Streamlit markdown content
-        - Displays experiment progress dataframes
+        - Displays experiment progress dataframes for both phases
         - Shows dynamic analysis based on current results
+        - Highlights critical discoveries about DSPy framework compatibility
     """
-    st.header("🧠 Analysis & Insights")
+    st.header("🧠 Two-Phase Experimental Analysis")
 
     summary_data = load_summary_data()
+
+    # Phase 1: Reasoning Field Results
+    st.subheader("📊 Phase 1: Reasoning Field Impact")
 
     col1, col2 = st.columns(2)
 
     with col1:
         st.markdown("""
-        ### 🎯 Key Findings
+        ### ✅ Phase 1 Results - CONFIRMED HYPOTHESIS
         
-        #### ✅ Reasoning Field Impact
+        #### 🎯 Reasoning Field Impact
         - **Contrastive CoT**: 42.67% → 51.33% (**+8.66% improvement**) 🏆
         - **Naive strategy**: 42.67% → 46.67% (**+4.0% improvement**)
         - **CoT & Plan & Solve**: Both show **+3.33% improvement**
         - **Self-Refine**: 43.33% → 45.33% (**+2.0% improvement**)
         
-        #### 🏆 Strategy Performance Rankings
-        1. **Contrastive CoT + Reasoning**: 51.33% (new champion!)
-        2. **Naive + Reasoning**: 46.67%
-        3. **CoT + Reasoning**: 46.0%
-        4. **Plan & Solve + Reasoning**: 46.0%
-        5. **Self-Refine + Reasoning**: 45.33%
+        #### 🏆 Champion Established
+        **Contrastive CoT + Reasoning: 51.33%** (Performance Ceiling)
         
-        #### 🚨 Surprising Insights
+        #### 🔬 Key Discoveries
+        - **Universal improvement**: 100% of strategies benefit from reasoning
+        - **Average gain**: +4.26% across all strategies
         - **Complex strategies benefit MORE** from reasoning than simple ones
-        - **Contrastive examples** create the strongest reasoning patterns
-        - **All strategies** show consistent improvement with reasoning
         """)
 
     with col2:
         st.markdown("""
-        ### 🧬 Theoretical Foundations
+        ### 🧬 Why Reasoning Fields Succeeded
         
-        #### Why Contrastive CoT Dominates
-        - **Positive/negative examples** create robust reasoning patterns
-        - **Error avoidance** explicitly taught through bad examples
-        - **Decision boundaries** clearer with contrasting cases
-        
-        #### Reasoning Field Mechanics
-        - **Avg. improvement**: +4.0% across all strategies
-        - **Range**: +2.0% to +8.66% improvement
-        - **Consistency**: 100% of strategies benefit
-        
-        #### Model Learning Patterns
-        - **Complex strategies** have more room for reasoning improvement
+        #### DSPy Architecture Alignment
         - **Bootstrap learning** enhanced by explicit reasoning traces
-        - **Error correction** happens within reasoning chains
+        - **Optimization signal** improved through intermediate steps
+        - **Framework synergy** between DSPy expectations and reasoning output
+        
+        #### Contrastive Learning Dominance
+        - **Negative examples** teach what NOT to extract
+        - **Decision boundaries** clarified through contrasting cases
+        - **Error prevention** explicitly modeled in training
+        
+        #### Performance Pattern
+        - **Range**: +2.0% to +8.66% improvement
+        - **Consistency**: 100% strategy success rate
         """)
 
-    # Dynamic insights based on current results
-    st.subheader("📊 Complete Experiment Results")
+    # Phase 2: Meta-Optimization Results
+    st.subheader("📉 Phase 2: Meta-Optimization Impact")
+
+    col3, col4 = st.columns(2)
+
+    with col3:
+        st.markdown("""
+        ### ❌ Phase 2 Results - HYPOTHESIS REFUTED
+        
+        #### 🚨 Meta-Optimization Failure
+        - **Best baseline**: Contrastive CoT + Reasoning (51.33%)
+        - **Best meta-optimized**: Contrastive CoT + Domain Expertise (49.33%)
+        - **Performance regression**: **-2.0%** ❌
+        - **Range**: 27.33% - 49.33% (high variance)
+        
+        #### 💥 Critical Failures
+        - **Format enforcement**: Severe degradation (27.33%)
+        - **Constitutional**: Mixed results, complexity overload
+        - **Multi-combination**: Diminishing returns
+        
+        #### 🔍 Key Discovery
+        **Meta-optimization cannot exceed reasoning field ceiling**
+        """)
+
+    with col4:
+        st.markdown("""
+        ### 🧠 Why Meta-Optimization Failed
+        
+        #### Instruction Conflict Syndrome
+        ```python
+        # Contrastive CoT demands:
+        "Provide reasoning showing..."
+        
+        # Format Enforcement demands:
+        "ONLY JSON object... No explanations"
+        # DIRECT CONTRADICTION!
+        ```
+        
+        #### The Reasoning Field Ceiling
+        - **Tier 1**: Base + Reasoning Fields (51.33%)
+        - **Tier 2**: Base + Meta-Optimization (49.33%)
+        - **Tier 3**: Base Strategy Alone (42.67%)
+        - **Tier 4**: Conflicting Meta-Opts (27.33%)
+        
+        #### Framework Compatibility Crisis
+        **DSPy alignment > Prompt complexity**
+        """)
+
+    # Critical Insights Section
+    st.subheader("💡 Critical Insights & Implications")
+
+    col5, col6 = st.columns(2)
+
+    with col5:
+        st.markdown("""
+        ### 🎯 Validated Optimization Principles
+        
+        1. **Reasoning fields are the optimization sweet spot** (+8.66% max)
+        2. **DSPy architecture alignment is critical** for performance
+        3. **Simple + reasoning > complex + meta-optimization**
+        4. **Prompt engineering conflicts severely degrade performance**
+        5. **Performance ceilings exist** - more complexity ≠ better results
+        
+        ### ⚠️ The Meta-Optimization Paradox
+        
+        **When Meta-Optimization Helps:**
+        - Base strategies without reasoning
+        - Simple enhancement objectives
+        - Framework-compatible optimizations
+        
+        **When Meta-Optimization Hurts:**
+        - Already optimized baselines
+        - Conflicting objectives
+        - Complex multi-optimization
+        """)
+
+    with col6:
+        st.markdown("""
+        ### 🚀 Strategic Recommendations
+        
+        #### For Maximum Performance
+        - **Use Contrastive CoT + Reasoning** (proven 51.33%)
+        - **Avoid meta-optimization** for this task type
+        - **Prioritize DSPy framework alignment**
+        
+        #### For Research & Development
+        - **Test reasoning fields first** before meta-optimization
+        - **Validate framework compatibility** before enhancements
+        - **Monitor for instruction conflicts**
+        
+        ### 🔬 Research Implications
+        - **Reasoning fields = primary optimization lever**
+        - **Framework-native optimization** beats external prompting
+        - **Architectural alignment** as optimization principle
+        - **Performance ceiling awareness** critical
+        """)
+
+    # Dynamic Results Display
+    st.subheader("📊 Complete Two-Phase Experiment Results")
 
     if summary_data:
+        # Phase 1 Results Table
+        st.markdown("#### Phase 1: Reasoning Field Results")
         strategies = [
             "naive",
             "cot",
@@ -368,7 +739,50 @@ def display_analysis_tab() -> None:
         df_results = pd.DataFrame(results_data)
         st.dataframe(df_results, use_container_width=True, hide_index=True)
 
-        # Summary statistics
+        # Phase 2 Meta-Optimization Results (if available)
+        meta_opt_strategies = [
+            k
+            for k in summary_data.keys()
+            if any(
+                meta_name in k
+                for meta_name in [
+                    "domain_expertise",
+                    "specificity",
+                    "error_prevention",
+                    "context_anchoring",
+                    "format_enforcement",
+                    "constitutional",
+                ]
+            )
+        ]
+
+        if meta_opt_strategies:
+            st.markdown("#### Phase 2: Meta-Optimization Results")
+            meta_results_data = []
+
+            for strategy in meta_opt_strategies[:10]:  # Show top 10
+                score = summary_data.get(strategy, {}).get("final_score", 0)
+                if score:
+                    # Determine baseline comparison
+                    baseline_score = 51.33 if "contrastive_cot" in strategy else 42.67
+                    vs_baseline = score - baseline_score
+
+                    meta_results_data.append(
+                        {
+                            "Meta-Optimized Strategy": strategy.replace(
+                                "_", " "
+                            ).title(),
+                            "Performance": f"{score:.2f}%",
+                            "vs Baseline": f"{vs_baseline:+.2f}%",
+                            "Success": "✅" if vs_baseline > 0 else "❌",
+                        }
+                    )
+
+            if meta_results_data:
+                df_meta = pd.DataFrame(meta_results_data)
+                st.dataframe(df_meta, use_container_width=True, hide_index=True)
+
+        # Summary Statistics
         completed_improvements = [
             float(row["Improvement"].replace("+", "").replace("%", ""))
             for row in results_data
@@ -376,19 +790,42 @@ def display_analysis_tab() -> None:
         ]
 
         if completed_improvements:
-            col3, col4, col5 = st.columns(3)
-            with col3:
+            st.markdown("#### Phase 1 Summary Statistics")
+            col7, col8, col9, col10 = st.columns(4)
+            with col7:
                 st.metric(
                     "Average Improvement",
                     f"+{sum(completed_improvements) / len(completed_improvements):.2f}%",
                 )
-            with col4:
+            with col8:
                 st.metric("Best Improvement", f"+{max(completed_improvements):.2f}%")
-            with col5:
+            with col9:
                 st.metric("Strategies Improved", f"{len(completed_improvements)}/5")
+            with col10:
+                st.metric("Performance Ceiling", "51.33%")
+
+        # Final Insights
+        st.markdown("""
+        ---
+        ### 🎯 Final Experimental Conclusions
+        
+        **Phase 1 (Reasoning Fields): CONFIRMED ✅**
+        - Universal improvement across all strategies
+        - Established performance ceiling at 51.33%
+        - Framework alignment is critical
+        
+        **Phase 2 (Meta-Optimization): REFUTED ❌**  
+        - Failed to exceed reasoning field baseline
+        - Created performance conflicts and regressions
+        - Complexity penalty outweighed benefits
+        
+        **Key Discovery: Reasoning fields + DSPy alignment = optimization sweet spot** 🎯
+        """)
 
     else:
-        st.info("No experimental data available yet. Run optimization to see progress.")
+        st.info(
+            "No experimental data available yet. Run optimization to see two-phase analysis."
+        )
 
 
 def display_model_details_tab() -> None:
@@ -631,7 +1068,7 @@ def main() -> None:
     )
 
     with tab1:
-        display_results_tab()
+        display_enhanced_results_tab()
 
     with tab2:
         display_analysis_tab()
