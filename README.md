@@ -7,7 +7,12 @@ It also saves compiled prompt artifacts and a central results file so strategies
 <!-- README_SURFACE_START -->
 ![Python](https://img.shields.io/badge/Python-Optimization_Stack-3776AB?style=flat-square&logo=python&logoColor=white) ![DSPy](https://img.shields.io/badge/DSPy-Prompt_Optimization-7C3AED?style=flat-square) ![Streamlit](https://img.shields.io/badge/Streamlit-Results_UI-FF4B4B?style=flat-square&logo=streamlit&logoColor=white)
 
-[![Portfolio Article](https://img.shields.io/badge/Portfolio%20Article-102A43?style=flat-square)](https://adredes-weslee.github.io/ai/nlp/dspy/2025/06/13/dspy-prompt-optimization-automotive-intelligence.html) [![Live Demo](https://img.shields.io/badge/Live%20Demo-FF8B2B?style=flat-square)](https://adredes-weslee-dspy-automotive-extractor-srcapp-cloud-fbfbhk.streamlit.app/)
+[![Portfolio Article](https://img.shields.io/badge/Portfolio%20Article-102A43?style=flat-square)](https://adredes-weslee.github.io/ai/nlp/dspy/2025/06/13/dspy-prompt-optimization-automotive-intelligence.html) [![Analysis%20Demo](https://img.shields.io/badge/Analysis%20Demo-FF8B2B?style=flat-square)](https://adredes-weslee-dspy-automotive-extractor-srcapp-cloud-fbfbhk.streamlit.app/)
+
+## Interface Preview
+
+![Interface preview](docs/screenshots/app-overview.png)
+
 ## Quickstart
 
 ```bash

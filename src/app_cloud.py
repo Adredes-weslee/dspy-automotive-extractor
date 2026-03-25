@@ -1099,10 +1099,11 @@ def display_cloud_demo_tab() -> None:
     st.header("🌐 Cloud Demo Information")
 
     st.info("""
-    **Live Demo Not Available in Cloud Version**
-    
-    The interactive live demo requires local LLM inference capabilities that are not available 
-    on Streamlit Community Cloud. However, you can:
+    **Analysis-first Cloud Version**
+
+    This hosted app focuses on experiment results, reasoning-field comparisons, and optimization
+    takeaways. The fully interactive extractor remains a local-only workflow because it depends
+    on local LLM inference.
     """)
 
     col1, col2 = st.columns(2)
@@ -1137,7 +1138,7 @@ def display_cloud_demo_tab() -> None:
         - ✅ **Research findings and recommendations**
         
         ### 🔗 **Repository Link**
-        [GitHub Repository](https://github.com/your-username/dspy-automotive-extractor)
+        [GitHub Repository](https://github.com/Adredes-weslee/dspy-automotive-extractor)
         """)
 
     # Example of what the demo would show
@@ -1266,11 +1267,36 @@ def main() -> None:
     """
     # Application title and description
     st.title("🚗 DSPy Automotive Extractor Dashboard")
-    st.markdown("*Cloud version - Comprehensive optimization analysis and insights*")
+    st.markdown("*Analysis-first cloud surface for the DSPy optimization study*")
 
     # Cloud version notice
     st.info(
-        "🌐 **Streamlit Cloud Version** - Full analysis capabilities with demo data"
+        "🌐 **Streamlit Cloud Version** - Analysis and comparison surfaces are available here; local extraction remains the full interactive path."
+    )
+
+    summary_data = load_summary_data()
+    best_strategy, best_payload = max(
+        summary_data.items(),
+        key=lambda item: item[1].get("final_score", float("-inf")),
+    )
+    strategy_count = len(summary_data)
+    meta_optimized_count = sum(
+        1
+        for payload in summary_data.values()
+        if payload.get("strategy_type") == "meta_optimized" or "_bootstrap" in payload.get("program_path", "")
+    )
+
+    metric_col1, metric_col2, metric_col3 = st.columns(3)
+    with metric_col1:
+        st.metric("Best archived F1", f"{best_payload.get('final_score', 0):.2f}")
+    with metric_col2:
+        st.metric("Strategies tracked", strategy_count)
+    with metric_col3:
+        st.metric("Meta-optimized runs", meta_optimized_count)
+
+    st.caption(
+        "Highest archived run: "
+        f"{best_strategy.replace('_', ' ').title()}."
     )
 
     # Create tabs
