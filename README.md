@@ -4,6 +4,22 @@ This repo is a DSPy pipeline for extracting `make`, `model`, and `year` from NHT
 
 It also saves compiled prompt artifacts and a central results file so strategies can be inspected later in the dashboards.
 
+<!-- README_SURFACE_START -->
+![Python](https://img.shields.io/badge/Python-Optimization_Stack-3776AB?style=flat-square&logo=python&logoColor=white) ![DSPy](https://img.shields.io/badge/DSPy-Prompt_Optimization-7C3AED?style=flat-square) ![Streamlit](https://img.shields.io/badge/Streamlit-Results_UI-FF4B4B?style=flat-square&logo=streamlit&logoColor=white)
+
+[![Portfolio Article](https://img.shields.io/badge/Portfolio%20Article-102A43?style=flat-square)](https://adredes-weslee.github.io/ai/nlp/dspy/2025/06/13/dspy-prompt-optimization-automotive-intelligence.html) [![Live Demo](https://img.shields.io/badge/Live%20Demo-FF8B2B?style=flat-square)](https://adredes-weslee-dspy-automotive-extractor-srcapp-cloud-fbfbhk.streamlit.app/)
+## Quickstart
+
+```bash
+copy .env.template .env  # or cp .env.template .env
+python src/verify_gpu.py
+streamlit run src/app_cloud.py
+```
+
+See [Setup and Run](#setup-and-run) for the full environment and verification path.
+
+<!-- README_SURFACE_END -->
+
 ## Why This Repository Exists
 
 - The task is to turn unstructured automotive complaint text into a consistent structured record that can be compared across prompting strategies with one shared score.
