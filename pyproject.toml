@@ -24,7 +24,7 @@ dependencies = [
     "langfuse==2.36.0",
     "langchain==0.3.25",        # Added - Langfuse dependency
     "psutil==7.0.0",            # Added - System monitoring for verify_gpu.py
-    "streamlit==1.35.0",
+    "streamlit==1.54.0",
     "pandas==2.2.2",
     "python-dotenv==1.0.1",
     "ollama==0.2.1",
